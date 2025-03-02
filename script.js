@@ -24,8 +24,8 @@ function createTimeline(events) {
     const graduation = svg.append("g")
         .attr("transform", `translate(40, ${height / 2})`);
 
-    // Ajoute un groupe "evenements" pour contenir les éléments de la frise en elle même
-    const evenements = svg.append("g")
+    // Ajoute un groupe "events" pour contenir les éléments de la frise en elle même
+    const events = svg.append("g")
         .attr("transform", `translate(40, ${height / 2})`);
 
     // Exemple d'ajout d'une ligne pour la frise chronologique
@@ -51,16 +51,14 @@ function createTimeline(events) {
         const duration = domain[1] - domain[0];
         const rangeDuration = range[1] - range[0];
         const pixelsPerDay = rangeDuration / (duration / (24 * 60 * 60 * 1000));
-        console.log(pixelsPerDay);
         let majorTicks, minorTicks;
         if (pixelsPerDay < 0.0002) {
             // work in progress
             // Affichage dynamique pour les périodes au dessus de l'ordre du millénaire
-            frequence_majorTicks = Math.exp(10,Math.round(Math.log(1/(5000 * pixelsPerDay))+3));
-            console.log(frequence_majorTicks);
-            frequence_minorTicks = frequence_majorTicks / 10;
-            majorTicks = d3.timeYear.every(frequence_majorTicks);
-            minorTicks = d3.timeYear.every(frequence_minorTicks);
+            frequenceMajorTicks = Math.pow(10,Math.round(Math.log10(0.2/pixelsPerDay)));
+            frequenceMinorTicks = frequence_majorTicks / 10;
+            majorTicks = d3.timeYear.every(frequenceMajorTicks);
+            minorTicks = d3.timeYear.every(frequenceMinorTicks);
         } else if (pixelsPerDay < 0.0008) {
             // Afficher des graduations pour les 5 siècles
             majorTicks = d3.timeYear.every(500);
@@ -157,7 +155,7 @@ function createTimeline(events) {
 
     if (events) {
         // Ajoute des rectangles pour chaque événement
-        evenements.selectAll("rect.event")
+        events.selectAll("rect.event")
             .data(events)
             .enter()
             .append("rect")
@@ -169,7 +167,7 @@ function createTimeline(events) {
             .attr("fill", "steelblue");
 
         // Ajoute des étiquettes de texte pour chaque événement
-        evenements.selectAll("text.event-label")
+        events.selectAll("text.event-label")
             .data(events)
             .enter()
             .append("text")
@@ -189,11 +187,11 @@ function createTimeline(events) {
         addTicks(newXScale);
 
         // Met à jour les rectangles d'événements
-        evenements.selectAll("rect.event")
+        events.selectAll("rect.event")
             .attr("x", d => newXScale(d.date) - 25);
 
         // Met à jour les étiquettes d'événements
-        evenements.selectAll("text.event-label")
+        events.selectAll("text.event-label")
             .attr("x", d => newXScale(d.date));
     }
 
@@ -205,8 +203,9 @@ function createTimeline(events) {
         const rangeDuration = range[1] - range[0];
         const pixelsPerDay = rangeDuration / (duration / (24 * 60 * 60 * 1000));
 
+
         if (pixelsPerDay < 3) {
-            return d3.timeFormat("%Y")(date);
+            return date.getFullYear();
         } else if (pixelsPerDay < 17) {
             return d3.timeFormat("%B %Y")(date);
         } else if (pixelsPerDay < 100) {
@@ -218,7 +217,7 @@ function createTimeline(events) {
 }
 
 // Définit la nomenclature des dates
-const nomenclature_date = d3.timeFormatDefaultLocale({
+const dateFormat = d3.timeFormatDefaultLocale({
     "dateTime": "%A %e %B %Y, %X",
     "date": "%d/%m/%Y",
     "time": "%H:%M:%S",
