@@ -254,16 +254,5 @@ d3.json("/events").then(events => {
     console.error("Erreur lors du chargement du fichier CSV des événements:", error);
 });
 
-// fetch('http://127.0.0.1:8000/events')
-//     .then(response => response.json())
-//     .then(data => {
-//         const eventsSQL = data;
-//         console.log(eventsSQL);
-//         // Vous pouvez maintenant utiliser la variable 'events' pour manipuler les données
-//     })
-//     .catch(error => {
-//         console.error('Erreur lors de la récupération des événements:', error);
-//     });
-
 // Redimensionne le canevas lorsque la fenêtre est redimensionnée
 window.addEventListener("resize", () => createTimeline(events));
