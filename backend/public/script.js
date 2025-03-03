@@ -56,7 +56,7 @@ function createTimeline(events) {
             // work in progress
             // Affichage dynamique pour les périodes au dessus de l'ordre du millénaire
             frequenceMajorTicks = Math.pow(10,Math.round(Math.log10(0.2/pixelsPerDay)));
-            frequenceMinorTicks = frequence_majorTicks / 10;
+            frequenceMinorTicks = frequenceMajorTicks / 10;
             majorTicks = d3.timeYear.every(frequenceMajorTicks);
             minorTicks = d3.timeYear.every(frequenceMinorTicks);
         } else if (pixelsPerDay < 0.0008) {
@@ -255,4 +255,6 @@ d3.json("/events").then(events => {
 });
 
 // Redimensionne le canevas lorsque la fenêtre est redimensionnée
-window.addEventListener("resize", () => createTimeline(events));
+window.addEventListener("resize", () => {
+    createTimeline();
+});
