@@ -1,3 +1,6 @@
+// Get the CSRF token from the meta tag
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 // Fonction pour créer ou mettre à jour la visualisation
 function createTimeline(events) {
     // Sélectionne l'élément div avec l'id 'timeline'
@@ -18,7 +21,7 @@ function createTimeline(events) {
     const svg = timeline.append("svg")
         .attr("width", width)
         .attr("height", height)
-        .call(d3.zoom().on("zoom", zoomed));
+        .call(d3.zoom().scaleExtent([0.5, 10]).on("zoom", zoomed));
 
     // Ajoute un groupe "graduation" pour contenir les éléments de la frise en elle même
     const graduation = svg.append("g")
@@ -38,11 +41,9 @@ function createTimeline(events) {
         .attr("stroke-width", 2);
 
     // Calcule l'échelle de temps
-    const timeScale = d3.scaleTime()
+    let timeScale = d3.scaleTime()
         .domain([startDate, endDate])
         .range([0, width - 80]);
-
-    
 
     // Fonction pour ajouter des graduations avec trois types de ticks
     function addTicks(scale) {
@@ -170,7 +171,7 @@ function createTimeline(events) {
             );
 
         }
-        // remove thme otherwise 
+        // remove them otherwise 
         else {
             graduation.selectAll("text.minor-label").remove();
         }
@@ -291,17 +292,18 @@ function createTimeline(events) {
     // Fonction de zoom
     function zoomed(event) {
         const newXScale = event.transform.rescaleX(timeScale);
+        timeScale = newXScale; // Update the global timeScale with the rescaled version
 
-        // Met à jour les graduations avec deux types de ticks
-        addTicks(newXScale);
+        // Met à jour les graduations avec trois types de ticks
+        addTicks(timeScale);
 
         // Met à jour les rectangles d'événements
         eventsGroup.selectAll("rect.event")
-            .attr("x", d => newXScale(d.date) - 25);
+            .attr("x", d => timeScale(d.date) - 25);
 
         // Met à jour les étiquettes d'événements
         eventsGroup.selectAll("text.event-label")
-            .attr("x", d => newXScale(d.date));
+            .attr("x", d => timeScale(d.date));
     }
 
     // Fonction pour formater les dates en fonction de l'échelle de temps
@@ -311,7 +313,6 @@ function createTimeline(events) {
         const duration = domain[1] - domain[0];
         const rangeDuration = range[1] - range[0];
         const pixelsPerDay = rangeDuration / (duration / (24 * 60 * 60 * 1000));
-
 
         if (pixelsPerDay < 3) {
             return date.getFullYear();
@@ -329,67 +330,67 @@ function createTimeline(events) {
         return d3.timeFormat("%H:%M")(date);
     }
 
-// Ajoute l'écouteur d'événement pour le clic droit
-svg.on("contextmenu", function(event) {
-    event.preventDefault();
-    const [x, y] = d3.pointer(event);
-    const date = timeScale.invert(x - 40); // Convertit la position x en date
+    // Ajoute l'écouteur d'événement pour le clic droit
+    svg.on("contextmenu", function(event) {
+        event.preventDefault();
+        const [x, y] = d3.pointer(event);
+        const date = timeScale.invert(x - 40); // Convertit la position x en date
 
-    // Crée le formulaire directement dans le script
-    const formHtml = `
-        <form id="createEventForm">
-            <input type="hidden" name="date" value="${date.toISOString()}">
-            <label for="name">Name:</label>
-            <input type="text" name="name">
-            <label for="description">Description:</label>
-            <textarea name="description"></textarea>
-            <button type="submit">Create</button>
-        </form>
-    `;
+        // Crée le formulaire directement dans le script
+        const formHtml = `
+            <form id="createEventForm">
+                <label for="name">Name:</label>
+                <input type="text" name="name">
+                <label for="description">Description:</label>
+                <textarea name="description"></textarea>
+                <label for="date">Date:</label>
+                <input type="date" name="date" value="${date.toISOString().split('T')[0]}">
+                <button type="submit">Create</button>
+            </form>
+        `;
 
-    // Ajoute ou met à jour le formulaire
-    eventsGroup.selectAll("foreignObject.createEventForm")
-        .data([date])
-        .join(
-            enter => enter.append("foreignObject")
-                .attr("class", "createEventForm")
-                .attr("x", x - 150)
-                .attr("y", y - 30)
-                .attr("width", 300)
-                .attr("height", 200)
-                .append("xhtml:div")
-                .html(formHtml),
-            update => update
-                .attr("x", x - 150)
-                .attr("y", y - 30)
-                .html(formHtml),
-            exit => exit.remove()
-        );
+        // Ajoute ou met à jour le formulaire
+        eventsGroup.selectAll("foreignObject.createEventForm")
+            .data([date])
+            .join(
+                enter => enter.append("foreignObject")
+                    .attr("class", "createEventForm")
+                    .attr("x", x - 150)
+                    .attr("y", - 120)
+                    .attr("width", 300)
+                    .attr("height", 200)
+                    .append("xhtml:div")
+                    .html(formHtml),
+                update => update
+                    .attr("x", x - 150)
+                    .attr("y", - 120)
+                    .html(formHtml),
+                exit => exit.remove()
+            );
 
-    // Ajoute l'écouteur d'événement pour le formulaire
-    document.getElementById('createEventForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const response = await fetch('/events', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-            },
-            body: formData
+        // Ajoute l'écouteur d'événement pour le formulaire
+        document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/events', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: formData
+            });
+            console.log('Submitting form data:', formData);
+            console.log('Response:', response);
+            if (response.ok) {
+                const updatedEvents = await response.json();
+                createTimeline(updatedEvents);
+            } else {
+                console.error('Failed to create event:', await response.text());
+            }
         });
-        console.log('Submitting form data:', formData);
-        console.log('Response:', response);
-        if (response.ok) {
-            const updatedEvents = await response.json();
-            createTimeline(updatedEvents);
-        } else {
-            console.error('Failed to create event:', await response.text());
-        }
     });
-});
-
-
 }
+
 // Définit la nomenclature des dates
 const dateFormat = d3.timeFormatDefaultLocale({
     "dateTime": "%A %e %B %Y, %X",
