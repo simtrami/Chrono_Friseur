@@ -41,9 +41,10 @@ function createTimeline(events) {
         .attr("stroke-width", 2);
 
     // Calcule l'échelle de temps
-    let timeScale = d3.scaleTime()
+    const timeScale = d3.scaleTime()
         .domain([startDate, endDate])
         .range([0, width - 80]);
+    let displayedScale = timeScale;
 
     // Fonction pour ajouter des graduations avec trois types de ticks
     function addTicks(scale) {
@@ -312,18 +313,20 @@ function createTimeline(events) {
     // Fonction de zoom
     function zoomed(event) {
         const newXScale = event.transform.rescaleX(timeScale);
-        timeScale = newXScale; // Update the global timeScale with the rescaled version
+        
 
         // Met à jour les graduations avec trois types de ticks
-        addTicks(timeScale);
+        addTicks(newXScale);
 
         // Met à jour les rectangles d'événements
         eventsGroup.selectAll("rect.event")
-            .attr("x", d => timeScale(d.date) - 25);
+            .attr("x", d => newXScale(d.date) - 25);
 
         // Met à jour les étiquettes d'événements
         eventsGroup.selectAll("text.event-label")
-            .attr("x", d => timeScale(d.date));
+            .attr("x", d => newXScale(d.date));
+
+        displayedScale = newXScale; // Update the global displayedScale with the rescaled version
     }
 
     // Fonction pour formater les dates en fonction de l'échelle de temps
@@ -354,7 +357,7 @@ function createTimeline(events) {
     svg.on("contextmenu", function(event) {
         event.preventDefault();
         const [x, y] = d3.pointer(event);
-        const date = timeScale.invert(x - 40); // Convertit la position x en date
+        const date = displayedScale.invert(x - 40); // Convertit la position x en date
 
         // Crée le formulaire directement dans le script
         const formHtml = `
