@@ -204,28 +204,65 @@ function createTimeline(events) {
                         .attr("width", 300)
                         .attr("height", 200)
                         .attr("fill", "orange");
-                    // Charge le formulaire depuis le fichier Blade
-                    fetch(`/eventForm?id=${d.id}&name=${d.name}&description=${d.description}&date=${d.date.toISOString().split('T')[0]}`)
-                        .then(response => response.text())
-                        .then(formHtml => {
-                            // Ajoute ou met à jour le formulaire
-                            eventsGroup.selectAll("foreignObject.eventForm")
-                                .data([d])
-                                .join(
-                                    enter => enter.append("foreignObject")
-                                        .attr("class", "eventForm")
-                                        .attr("x", timeScale(d.date) - 150)
-                                        .attr("y", -30)
-                                        .attr("width", 300)
-                                        .attr("height", 200)
-                                        .append("xhtml:div")
-                                        .html(formHtml),
-                                    update => update
-                                        .attr("x", timeScale(d.date) - 150)
-                                        .html(formHtml),
-                                    exit => exit.remove()
-                                );
+
+                    // Crée le formulaire directement dans le script
+                    const formHtml = `
+                        <form id="eventUpdater">
+                            <input type="hidden" name="event-id" value="${d.id}">
+                            <label for="name">Name:</label>
+                            <input type="text" name="name" value="${d.name}">
+                            <label for="description">Description:</label>
+                            <textarea name="description">${d.description}</textarea>
+                            <label for="date">Date:</label>
+                            <input type="date" name="date" value="${d.date.toISOString().split('T')[0]}">
+                            <button type="submit">Update</button>
+                        </form>
+                    `;
+
+                    // Ajoute ou met à jour le formulaire
+                    eventsGroup.selectAll("foreignObject.eventForm")
+                        .data([d])
+                        .join(
+                            enter => enter.append("foreignObject")
+                                .attr("class", "eventForm")
+                                .attr("x", timeScale(d.date) - 150)
+                                .attr("y", -30)
+                                .attr("width", 300)
+                                .attr("height", 200)
+                                .append("xhtml:div")
+                                .html(formHtml),
+                            update => update
+                                .attr("x", timeScale(d.date) - 150)
+                                .html(formHtml),
+                            exit => exit.remove()
+                        );
+
+                    // Ajoute l'écouteur d'événement pour le formulaire
+                    document.getElementById('eventUpdater').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        console.log('Submitting form data:', e.target);
+                        const id = e.target['event-id'].value;
+                        const formData = {
+                            name: e.target.name.value,
+                            description: e.target.description.value,
+                            date: e.target.date.value
+                        };
+                        const response = await fetch('/events/' + id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                            },
+                            body: JSON.stringify(formData)
                         });
+                        if (response.ok) {
+                            console.log('Event updated:', await response.json());
+                            // TODO: Add the new event to the timeline
+                        } else {
+                            console.error('Failed to update event:', await response.text());
+                        }
+                    });
+
                 } else {
                     // Réduit le rectangle et cache le formulaire
                     d3.select(this)
@@ -291,6 +328,66 @@ function createTimeline(events) {
     function formatHour(date, scale) {
         return d3.timeFormat("%H:%M")(date);
     }
+
+// Ajoute l'écouteur d'événement pour le clic droit
+svg.on("contextmenu", function(event) {
+    event.preventDefault();
+    const [x, y] = d3.pointer(event);
+    const date = timeScale.invert(x - 40); // Convertit la position x en date
+
+    // Crée le formulaire directement dans le script
+    const formHtml = `
+        <form id="createEventForm">
+            <input type="hidden" name="date" value="${date.toISOString()}">
+            <label for="name">Name:</label>
+            <input type="text" name="name">
+            <label for="description">Description:</label>
+            <textarea name="description"></textarea>
+            <button type="submit">Create</button>
+        </form>
+    `;
+
+    // Ajoute ou met à jour le formulaire
+    eventsGroup.selectAll("foreignObject.createEventForm")
+        .data([date])
+        .join(
+            enter => enter.append("foreignObject")
+                .attr("class", "createEventForm")
+                .attr("x", x - 150)
+                .attr("y", y - 30)
+                .attr("width", 300)
+                .attr("height", 200)
+                .append("xhtml:div")
+                .html(formHtml),
+            update => update
+                .attr("x", x - 150)
+                .attr("y", y - 30)
+                .html(formHtml),
+            exit => exit.remove()
+        );
+
+    // Ajoute l'écouteur d'événement pour le formulaire
+    document.getElementById('createEventForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const response = await fetch('/events', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+            },
+            body: formData
+        });
+        console.log('Submitting form data:', formData);
+        console.log('Response:', response);
+        if (response.ok) {
+            const updatedEvents = await response.json();
+            createTimeline(updatedEvents);
+        } else {
+            console.error('Failed to create event:', await response.text());
+        }
+    });
+});
+
 
 }
 // Définit la nomenclature des dates

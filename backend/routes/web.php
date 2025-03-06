@@ -25,7 +25,7 @@ Route::get('/events/{id}', function ($id) {
 //     return $event;
 // });
 
-Route::post('/events', function () {
+Route::post('/events',    function () {
     $event = Event::create(request()->all());
     return $event;
 });
