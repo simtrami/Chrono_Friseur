@@ -36,6 +36,11 @@ Route::put('/events/{id}', function ($id) {
     return $event;
 });
 
+Route::delete('/events/{id}', function ($id) {
+    $event = Event::find($id);
+    $event->delete();
+    return response()->json(['message' => 'Event deleted successfully']);
+});
 
 Route::get('/eventForm', function () {
     $id = request('id');

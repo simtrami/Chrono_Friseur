@@ -12,8 +12,6 @@
 <body>
     <div style="display: flex; flex-direction: column; align-items: center;">
         <div id="timeline"></div>
-        @include('components.create')
-        @include('components.update')
     </div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="script.js"></script>

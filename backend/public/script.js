@@ -217,6 +217,7 @@ function createTimeline(events) {
                             <label for="date">Date:</label>
                             <input type="date" name="date" value="${d.date.toISOString().split('T')[0]}">
                             <button type="submit">Update</button>
+                            <button type="button" id="deleteEventButton">Delete</button>
                         </form>
                     `;
 
@@ -252,7 +253,7 @@ function createTimeline(events) {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                                'X-CSRF-TOKEN': csrfToken
                             },
                             body: JSON.stringify(formData)
                         });
@@ -261,6 +262,25 @@ function createTimeline(events) {
                             // TODO: Add the new event to the timeline
                         } else {
                             console.error('Failed to update event:', await response.text());
+                        }
+                    });
+
+                    // Ajoute l'écouteur d'événement pour le bouton de suppression
+                    document.getElementById('deleteEventButton').addEventListener('click', async () => {
+                        const id = d.id;
+                        const response = await fetch('/events/' + id, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken
+                            }
+                        });
+                        if (response.ok) {
+                            console.log('Event deleted:', await response.json());
+                            // Supprime l'événement de la frise chronologique
+                            events = events.filter(event => event.id !== id);
+                            createTimeline(events);
+                        } else {
+                            console.error('Failed to delete event:', await response.text());
                         }
                     });
 
