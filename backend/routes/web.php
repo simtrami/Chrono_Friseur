@@ -31,6 +31,16 @@ Route::post('/events', function () {
 });
 
 Route::put('/events/{id}', function ($id) {
-    Event::find($id)->update(request()->all()); // boolean
-    return Event::find($id);
+    $event = Event::find($id);
+    $event->update(request()->all());
+    return $event;
+});
+
+
+Route::get('/eventForm', function () {
+    $id = request('id');
+    $name = request('name');
+    $description = request('description');
+    $date = request('date');
+    return view('components/eventForm', compact('id', 'name', 'description', 'date'));
 });

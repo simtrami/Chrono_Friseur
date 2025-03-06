@@ -87,10 +87,14 @@ function createTimeline(events) {
             // Afficher des graduations pour les semaines
             majorTicks = d3.timeMonday.every(1);
             minorTicks = d3.timeDay.every(1);
-        } else {
+        } else if (pixelsPerDay < 370) {
             // Afficher des graduations pour les jours
             majorTicks = d3.timeDay.every(1);
-            minorTicks = d3.timeYear.every(100);
+            minorTicks = d3.timeHour.every(12);
+        } else {
+            // Afficher des graduations pour les heures
+            majorTicks = d3.timeDay.every(1);
+            minorTicks = d3.timeHour.every(1);
         }
 
         // Ajoute des graduations secondaires (grises sans étiquettes)
@@ -145,6 +149,31 @@ function createTimeline(events) {
                     .text(d => formatDate(d, scale)),
                 exit => exit.remove()
             );
+        
+        // if hours are displayed, add graduations labels for minor ticks
+        if (pixelsPerDay >= 800) {
+            // Ajoute des étiquettes pour les graduations principales
+            graduation.selectAll("text.minor-label")
+            .data(minorTicks.range(...domain))
+            .join(
+                enter => enter.append("text")
+                    .attr("class", "minor-label")
+                    .attr("x", d => scale(d))
+                    .attr("y", -20)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "12px")
+                    .text(d => formatHour(d, scale)),
+                update => update
+                    .attr("x", d => scale(d))
+                    .text(d => formatHour(d, scale)),
+                exit => exit.remove()
+            );
+
+        }
+        // remove thme otherwise 
+        else {
+            graduation.selectAll("text.minor-label").remove();
+        }
 
         
 
@@ -164,8 +193,51 @@ function createTimeline(events) {
             .attr("y", -30)
             .attr("width", 50)
             .attr("height", 20)
-            .attr("fill", "steelblue");
-
+            .attr("fill", "steelblue")
+            .on("click", function(event, d) {
+                // Toggle the expanded state
+                d.expanded = !d.expanded;
+    
+                if (d.expanded) {
+                    // Agrandit le rectangle et affiche le formulaire
+                    d3.select(this)
+                        .attr("width", 300)
+                        .attr("height", 200)
+                        .attr("fill", "orange");
+                    // Charge le formulaire depuis le fichier Blade
+                    fetch(`/eventForm?id=${d.id}&name=${d.name}&description=${d.description}&date=${d.date.toISOString().split('T')[0]}`)
+                        .then(response => response.text())
+                        .then(formHtml => {
+                            // Ajoute ou met à jour le formulaire
+                            eventsGroup.selectAll("foreignObject.eventForm")
+                                .data([d])
+                                .join(
+                                    enter => enter.append("foreignObject")
+                                        .attr("class", "eventForm")
+                                        .attr("x", timeScale(d.date) - 150)
+                                        .attr("y", -30)
+                                        .attr("width", 300)
+                                        .attr("height", 200)
+                                        .append("xhtml:div")
+                                        .html(formHtml),
+                                    update => update
+                                        .attr("x", timeScale(d.date) - 150)
+                                        .html(formHtml),
+                                    exit => exit.remove()
+                                );
+                        });
+                } else {
+                    // Réduit le rectangle et cache le formulaire
+                    d3.select(this)
+                        .attr("width", 50)
+                        .attr("height", 20)
+                        .attr("fill", "steelblue");
+    
+                    // Supprime le formulaire
+                    eventsGroup.selectAll("foreignObject.eventForm").remove();
+                }
+            });
+    
         // Ajoute des étiquettes de texte pour chaque événement
         eventsGroup.selectAll("text.event-label")
             .data(events)
@@ -214,8 +286,13 @@ function createTimeline(events) {
             return d3.timeFormat("%A %d %B %Y")(date);
         }
     }
-}
 
+    // Fonction pour formater les dates en fonction de l'échelle de temps
+    function formatHour(date, scale) {
+        return d3.timeFormat("%H:%M")(date);
+    }
+
+}
 // Définit la nomenclature des dates
 const dateFormat = d3.timeFormatDefaultLocale({
     "dateTime": "%A %e %B %Y, %X",
@@ -227,19 +304,6 @@ const dateFormat = d3.timeFormatDefaultLocale({
     "months": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
     "shortMonths": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
 });
-
-// Charge les données à partir du fichier CSV des événements
-// d3.csv("events.csv").then(events => {
-//     // Convertit les dates en objets JavaScript Date
-//     events.forEach(d => {
-//         d.date = new Date(d.date);
-//     });
-
-//     // Crée la visualisation initiale avec les données chargées
-//     createTimeline(events);
-// }).catch(error => {
-//     console.error("Erreur lors du chargement du fichier CSV des événements:", error);
-// });
 
 // Charge les données à partir du fichier CSV des événements
 d3.json("/events").then(events => {
