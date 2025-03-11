@@ -47,5 +47,5 @@ Route::get('/eventForm', function () {
     $name = request('name');
     $description = request('description');
     $date = request('date');
-    return view('components/eventForm', compact('id', 'name', 'description', 'date'));
+    return view('components.eventForm', compact('id', 'name', 'description','date'));
 });

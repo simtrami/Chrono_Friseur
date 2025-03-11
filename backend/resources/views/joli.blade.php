@@ -18,7 +18,7 @@
 
             <div class="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
                 <div>
-                    <h2 class="text-base/7 font-semibold text-gray-900">Créer un événement</h2>
+                    <h2 class="text-base/7 font-semibold text-gray-900">Créer deux évé</h2>
                     <p class="mt-1 text-sm/6 text-gray-600">oui oui.</p>
                 </div>
 

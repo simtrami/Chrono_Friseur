@@ -21,7 +21,7 @@ function createTimeline(events) {
     const svg = timeline.append("svg")
         .attr("width", width)
         .attr("height", height)
-        .call(d3.zoom().scaleExtent([0.5, 10]).on("zoom", zoomed));
+        .call(d3.zoom().on("zoom", zoomed));
 
     // Ajoute un groupe "graduation" pour contenir les éléments de la frise en elle même
     const graduation = svg.append("g")
@@ -201,89 +201,85 @@ function createTimeline(events) {
                 d.expanded = !d.expanded;
     
                 if (d.expanded) {
+                    //supprime l'eventuel label
+                    eventsGroup.selectAll("text.event-label")
+                        .data(events.filter(d => !d.expanded))
+                        .exit()
+                        .remove();
+
                     // Agrandit le rectangle et affiche le formulaire
                     d3.select(this)
                         .attr("width", 300)
-                        .attr("height", 200)
+                        .attr("height", 600)
                         .attr("fill", "orange");
 
-                    // Crée le formulaire directement dans le script
-                    const formHtml = `
-                        <form id="eventUpdater">
-                            <input type="hidden" name="event-id" value="${d.id}">
-                            <label for="name">Name:</label>
-                            <input type="text" name="name" value="${d.name}">
-                            <label for="description">Description:</label>
-                            <textarea name="description">${d.description}</textarea>
-                            <label for="date">Date:</label>
-                            <input type="date" name="date" value="${d.date.toISOString().split('T')[0]}">
-                            <button type="submit">Update</button>
-                            <button type="button" id="deleteEventButton">Delete</button>
-                        </form>
-                    `;
+                    // Charge le formulaire depuis le fichier Blade
+                    fetch(`/eventForm?id=${d.id}&name=${d.name}&description=${d.description}&date=${d.date.toISOString().split('T')[0]}`)
+                        .then(response => response.text())
+                        .then(formHtml => {
+                            // Ajoute ou met à jour le formulaire
+                            eventsGroup.selectAll("foreignObject.eventForm")
+                                .data([d])
+                                .join(
+                                    enter => enter.append("foreignObject")
+                                        .attr("class", "eventForm")
+                                        .attr("x", timeScale(d.date))
+                                        .attr("y", -30)
+                                        .attr("width", 300)
+                                        .attr("height", 600)
+                                        .append("xhtml:div")
+                                        .html(formHtml),
+                                    update => update
+                                        .attr("x", timeScale(d.date) - 150)
+                                        .html(formHtml),
+                                    exit => exit.remove()
+                                );
 
-                    // Ajoute ou met à jour le formulaire
-                    eventsGroup.selectAll("foreignObject.eventForm")
-                        .data([d])
-                        .join(
-                            enter => enter.append("foreignObject")
-                                .attr("class", "eventForm")
-                                .attr("x", timeScale(d.date) - 150)
-                                .attr("y", -30)
-                                .attr("width", 300)
-                                .attr("height", 200)
-                                .append("xhtml:div")
-                                .html(formHtml),
-                            update => update
-                                .attr("x", timeScale(d.date) - 150)
-                                .html(formHtml),
-                            exit => exit.remove()
-                        );
+                            // Ajoute l'écouteur d'événement pour le formulaire
+                            document.getElementById('eventForm').addEventListener('submit', async (e) => {
+                                e.preventDefault();
+                                console.log('Submitting form data:', e.target);
+                                const id = e.target['event-id'].value;
+                                const formData = {
+                                    name: e.target.name.value,
+                                    description: e.target.description.value,
+                                    date: e.target.date.value
+                                };
+                                const response = await fetch('/events/' + id, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
+                                if (response.ok) {
+                                    console.log('Event updated:', await response.json());
+                                    // TODO: Add the new event to the timeline
+                                } else {
+                                    console.error('Failed to update event:', await response.text());
+                                }
+                            });
 
-                    // Ajoute l'écouteur d'événement pour le formulaire
-                    document.getElementById('eventUpdater').addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        console.log('Submitting form data:', e.target);
-                        const id = e.target['event-id'].value;
-                        const formData = {
-                            name: e.target.name.value,
-                            description: e.target.description.value,
-                            date: e.target.date.value
-                        };
-                        const response = await fetch('/events/' + id, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken
-                            },
-                            body: JSON.stringify(formData)
+                            // Ajoute l'écouteur d'événement pour le bouton de suppression
+                            document.getElementById('deleteEventButton').addEventListener('click', async () => {
+                                const id = d.id;
+                                const response = await fetch('/events/' + id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': csrfToken
+                                    }
+                                });
+                                if (response.ok) {
+                                    console.log('Event deleted:', await response.json());
+                                    // Supprime l'événement de la frise chronologique
+                                    events = events.filter(event => event.id !== id);
+                                    createTimeline(events);
+                                } else {
+                                    console.error('Failed to delete event:', await response.text());
+                                }
+                            });
                         });
-                        if (response.ok) {
-                            console.log('Event updated:', await response.json());
-                            // TODO: Add the new event to the timeline
-                        } else {
-                            console.error('Failed to update event:', await response.text());
-                        }
-                    });
-
-                    // Ajoute l'écouteur d'événement pour le bouton de suppression
-                    document.getElementById('deleteEventButton').addEventListener('click', async () => {
-                        const id = d.id;
-                        const response = await fetch('/events/' + id, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': csrfToken
-                            }
-                        });
-                        if (response.ok) {
-                            console.log('Event deleted:', await response.json());
-                            // Supprime l'événement de la frise chronologique
-                            events = events.filter(event => event.id !== id);
-                            createTimeline(events);
-                        } else {
-                            console.error('Failed to delete event:', await response.text());
-                        }
-                    });
 
                 } else {
                     // Réduit le rectangle et cache le formulaire
@@ -294,40 +290,55 @@ function createTimeline(events) {
     
                     // Supprime le formulaire
                     eventsGroup.selectAll("foreignObject.eventForm").remove();
+
+                    // Ajoute des étiquettes de texte
+                    eventsGroup.selectAll("text.event-label")
+                        .data(events.filter(d => !d.expanded))
+                        .enter()
+                        .append("text")
+                        .attr("class", "event-label")
+                        .attr("x", d => timeScale(d.date))
+                        .attr("y", -16)
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", "12px")
+                        .text(d => d.name);
                 }
             });
-    
-        // Ajoute des étiquettes de texte pour chaque événement
+
+        // Ajoute des étiquettes de texte pour chaque événement non étendu
         eventsGroup.selectAll("text.event-label")
-            .data(events)
+            .data(events.filter(d => !d.expanded))
             .enter()
             .append("text")
             .attr("class", "event-label")
             .attr("x", d => timeScale(d.date))
-            .attr("y", -15)
+            .attr("y", -16)
             .attr("text-anchor", "middle")
             .attr("font-size", "12px")
             .text(d => d.name);
     }
 
     // Fonction de zoom
-    function zoomed(event) {
-        const newXScale = event.transform.rescaleX(timeScale);
-        
+function zoomed(event) {
+    const newXScale = event.transform.rescaleX(timeScale);
 
-        // Met à jour les graduations avec trois types de ticks
-        addTicks(newXScale);
+    // Met à jour les graduations avec trois types de ticks
+    addTicks(newXScale);
 
-        // Met à jour les rectangles d'événements
-        eventsGroup.selectAll("rect.event")
-            .attr("x", d => newXScale(d.date) - 25);
+    // Met à jour les rectangles d'événements
+    eventsGroup.selectAll("rect.event")
+        .attr("x", d => newXScale(d.date) - 25);
 
-        // Met à jour les étiquettes d'événements
-        eventsGroup.selectAll("text.event-label")
-            .attr("x", d => newXScale(d.date));
+    // Met à jour les étiquettes d'événements
+    eventsGroup.selectAll("text.event-label")
+        .attr("x", d => newXScale(d.date));
 
-        displayedScale = newXScale; // Update the global displayedScale with the rescaled version
-    }
+    // Met à jour les formulaires d'événements
+    eventsGroup.selectAll("foreignObject.eventForm")
+        .attr("x", d => newXScale(d.date));
+
+    displayedScale = newXScale; // Update the global displayedScale with the rescaled version
+}
 
     // Fonction pour formater les dates en fonction de l'échelle de temps
     function formatDate(date, scale) {
@@ -358,59 +369,51 @@ function createTimeline(events) {
         event.preventDefault();
         const [x, y] = d3.pointer(event);
         const date = displayedScale.invert(x - 40); // Convertit la position x en date
-
-        // Crée le formulaire directement dans le script
-        const formHtml = `
-            <form id="createEventForm">
-                <label for="name">Name:</label>
-                <input type="text" name="name">
-                <label for="description">Description:</label>
-                <textarea name="description"></textarea>
-                <label for="date">Date:</label>
-                <input type="date" name="date" value="${date.toISOString().split('T')[0]}">
-                <button type="submit">Create</button>
-            </form>
-        `;
-
-        // Ajoute ou met à jour le formulaire
-        eventsGroup.selectAll("foreignObject.createEventForm")
-            .data([date])
-            .join(
-                enter => enter.append("foreignObject")
-                    .attr("class", "createEventForm")
-                    .attr("x", x - 150)
-                    .attr("y", - 120)
-                    .attr("width", 300)
-                    .attr("height", 200)
-                    .append("xhtml:div")
-                    .html(formHtml),
-                update => update
-                    .attr("x", x - 150)
-                    .attr("y", - 120)
-                    .html(formHtml),
-                exit => exit.remove()
-            );
-
-        // Ajoute l'écouteur d'événement pour le formulaire
-        document.getElementById('createEventForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const response = await fetch('/events', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: formData
+    
+        // Charge le formulaire depuis le fichier Blade
+        fetch(`/eventForm?date=${date.toISOString().split('T')[0]}&title=Créer un événement&descriptionText=oui oui.`)
+            .then(response => response.text())
+            .then(formHtml => {
+                // Ajoute ou met à jour le formulaire
+                eventsGroup.selectAll("foreignObject.createEventForm")
+                    .data([date])
+                    .join(
+                        enter => enter.append("foreignObject")
+                            .attr("class", "createEventForm")
+                            .attr("x", x - 150)
+                            .attr("y", - 120)
+                            .attr("width", 300)
+                            .attr("height", 600)
+                            .append("xhtml:div")
+                            .html(formHtml),
+                        update => update
+                            .attr("x", x - 150)
+                            .attr("y", - 120)
+                            .html(formHtml),
+                        exit => exit.remove()
+                    );
+    
+                // Ajoute l'écouteur d'événement pour le formulaire
+                document.getElementById('eventForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const response = await fetch('/events', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: formData
+                    });
+                    console.log('Submitting form data:', formData);
+                    console.log('Response:', response);
+                    if (response.ok) {
+                        const updatedEvents = await response.json();
+                        createTimeline(updatedEvents);
+                    } else {
+                        console.error('Failed to create event:', await response.text());
+                    }
+                });
             });
-            console.log('Submitting form data:', formData);
-            console.log('Response:', response);
-            if (response.ok) {
-                const updatedEvents = await response.json();
-                createTimeline(updatedEvents);
-            } else {
-                console.error('Failed to create event:', await response.text());
-            }
-        });
     });
 }
 
