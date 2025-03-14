@@ -14,6 +14,7 @@
         <div id="timeline"></div>
     </div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="script.js"></script>
+    <script src="app.js"></script>
+    <script src="datetime-format.js"></script>
 </body>
 </html>
