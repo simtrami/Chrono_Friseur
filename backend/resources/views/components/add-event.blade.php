@@ -40,13 +40,13 @@
                                 description: this.description,
                                 date: this.date
                             }).then(response => {
-                                this.$dispatch('notify', response.data)
+                                this.$dispatch('notify', { content: `${response.data.name} a bien été créé.`, type: 'success' })
                                 this.$dialog.close()
                                 this.name= ''
                                 this.description= ''
                                 this.date= ''
                             }).catch(error => {
-                                this.$dispatch('notify', error)
+                                this.$dispatch('notify', { content: `Une erreur s'est produite, veuillez vérifier les informations données.`, type: 'error' })
                             })
                         }
                     }"

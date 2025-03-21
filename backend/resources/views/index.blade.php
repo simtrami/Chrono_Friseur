@@ -17,7 +17,7 @@
 <body class="m-0 p-0 flex justify-center items-center h-screen bg-gray-100 font-sans">
 
 <!-- Notification -->
-<div x-data @notify.window="console.log($event.detail)"></div>
+<x-notification />
 
 <!-- AddEvent -->
 <x-add-event/>
