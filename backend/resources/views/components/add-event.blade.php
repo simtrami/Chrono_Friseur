@@ -1,7 +1,5 @@
-<!-- AddEvent -->
 <div
     x-data="{ openAddEvent: false }"
-    {{--    @add-event="eventApiCall($event.detail)"--}}
     class="absolute bottom-12 right-12 z-10">
     <!-- AddEvent Button -->
     <button
@@ -80,7 +78,9 @@
                         value: '{{ $date ?? '' }}',
                         init() {
                             let picker = flatpickr(this.$refs.picker, {
-                                dateFormat: 'd/m/Y h:i',
+                                dateFormat: 'Y-m-d H:i',
+                                altInput: true,
+                                altFormat: 'd/m/Y H:i',
                                 defaultDate: this.value,
                                 allowInput: true,
                                 enableTime: true,

@@ -19,16 +19,18 @@
 <!-- Notification -->
 <div x-data @notify.window="console.log($event.detail)"></div>
 
+<!-- AddEvent -->
 <x-add-event/>
 
+<!-- Timeline -->
 <div class="flex flex-col items-center">
     <div id="timeline" class="border border-gray-300 bg-white relative"></div>
 </div>
 
+<!-- scripts -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script src="app.js"></script>
-
 <script src="datetime-format.js"></script>
 </body>
 </html>
