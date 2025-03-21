@@ -1,13 +1,13 @@
 <div
     x-data="{ openAddEvent: false }"
-    class="absolute bottom-12 right-12 z-10">
+    class="fixed bottom-0 right-0 pr-12 pb-12 z-10">
     <!-- AddEvent Button -->
     <button
         x-on:click="openAddEvent = true"
         type="button"
-        class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+        class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
     >
-        <x-icons.plus size="size-5"/>
+        <x-icons.plus size="size-6"/>
 
         <span>Événement</span>
     </button>
