@@ -1,3 +1,5 @@
+@use('Illuminate\Support\Facades\Vite')
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite('resources/css/app.css')
+    @vite('resources/js/app.js')
     <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
@@ -13,7 +16,7 @@
     <script src="flatpickr.js"></script>
 </head>
 
-<body class="m-0 p-0 flex justify-center items-center h-screen bg-gray-100 font-sans">
+<body class="m-0 p-3 flex justify-center items-center h-screen bg-gray-100 font-sans">
 
 <!-- Notification -->
 <x-notification />
@@ -22,12 +25,7 @@
 <x-add-event/>
 
 <!-- Timeline -->
-<div class="flex flex-col items-center">
-    <div id="timeline" class="border border-gray-300 bg-white relative"></div>
-</div>
+<x-timeline/>
 
-<!-- scripts -->
-@vite('resources/js/app.js')
-@vite('resources/js/datetime-format.js')
 </body>
 </html>

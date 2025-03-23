@@ -22,7 +22,7 @@ class Event extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'datetime',
+            'date' => 'datetime:Y-m-d H:i',
         ];
     }
 

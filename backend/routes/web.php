@@ -8,10 +8,6 @@ Route::get('/', function () {
     return view('index');
 });
 
-Route::get('/joli', function () {
-    return view('joli');
-});
-
 Route::get('/events', function () {
     $events = Event::all();
     return $events;
