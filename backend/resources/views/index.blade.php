@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite('resources/css/app.css')
-    @vite('resources/js/app.js')
     <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
@@ -28,9 +27,7 @@
 </div>
 
 <!-- scripts -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
-
-<script src="app.js"></script>
-<script src="datetime-format.js"></script>
+@vite('resources/js/app.js')
+@vite('resources/js/datetime-format.js')
 </body>
 </html>
