@@ -28,6 +28,7 @@ Route::get('/events/{id}', function ($id) {
 
 Route::post('/events',    function (StoreEventRequest $request) {
     $validated = $request->validated();
+    Event::create($validated);
     return $validated;
 });
 
