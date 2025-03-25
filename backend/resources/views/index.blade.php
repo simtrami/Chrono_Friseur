@@ -21,9 +21,6 @@
 <!-- Notification -->
 <x-notification />
 
-<!-- AddEvent -->
-<x-add-event/>
-
 <!-- Timeline -->
 <x-timeline/>
 

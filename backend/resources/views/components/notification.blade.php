@@ -4,7 +4,7 @@
             this.notifications.push({
                 id: e.timeStamp,
                 type: e.detail.type,
-                content: e.detail.content,
+                content: e.detail.content
             })
         },
         remove(notification) {
@@ -27,14 +27,12 @@
                     error: 'Erreur'
                 },
                 init() {
-                    this.$nextTick(() => this.show = true)
-
-                    setTimeout(() => this.transitionOut(), 3000)
+                    this.$nextTick(() => this.show = true);
+                    setTimeout(() => this.transitionOut(), 3000);
                 },
                 transitionOut() {
-                    this.show = false
-
-                    setTimeout(() => this.remove(this.notification), 500)
+                    this.show = false;
+                    setTimeout(() => this.remove(this.notification), 500);
                 }
             }"
             x-show="show"
@@ -75,9 +73,7 @@
                 <!-- Remove button -->
                 <div class="flex items-center">
                     <button @click="transitionOut()" type="button" class="inline-flex items-center font-medium justify-center p-1.5 rounded-md hover:bg-gray-800/5 text-gray-400 hover:text-gray-800">
-                        <svg aria-hidden class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icons.cross size="size-5"/>
                         <span class="sr-only">Fermer la notification</span>
                     </button>
                 </div>

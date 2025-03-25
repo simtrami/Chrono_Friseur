@@ -3,13 +3,13 @@
     class="fixed bottom-0 right-0 pr-12 pb-12 z-10">
     <!-- AddEvent Button -->
     <button
-        x-on:click="openAddEvent = true"
+        @click="openAddEvent = true"
         type="button"
-        class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+        class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition"
     >
         <x-icons.plus size="size-6"/>
 
-        <span>Événement</span>
+        <span class="text-lg">Événement</span>
     </button>
 
     <!-- AddEvent Modal -->
@@ -55,7 +55,7 @@
                                 })
                             }
                         }"
-                        x-on:submit.prevent="submit()"
+                        @submit.prevent="submit()"
                     >
                         <!-- Body -->
                         <div>
@@ -124,7 +124,7 @@
 
                         <!-- Actions -->
                         <div class="mt-6 flex justify-end space-x-2">
-                            <button type="button" x-on:click="$dialog.close(); openAddEvent = false"
+                            <button type="button" @click="$dialog.close(); openAddEvent = false"
                                     class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-sm text-gray-800 hover:bg-gray-800/10"
                             >Annuler
                             </button>
