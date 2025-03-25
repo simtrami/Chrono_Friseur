@@ -35,7 +35,7 @@ Route::put('/events/{id}', function ($id) {
 });
 
 Route::delete('/events/{id}', function ($id) {
-    $event = Event::find($id);
+    $event = Event::findOrFail($id);
     $event->delete();
     return response()->json(['message' => 'Event deleted successfully']);
 });
