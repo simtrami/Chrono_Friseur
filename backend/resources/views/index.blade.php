@@ -1,3 +1,5 @@
+@use('Illuminate\Support\Facades\Vite')
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,21 +16,13 @@
     <script src="flatpickr.js"></script>
 </head>
 
-<body class="m-0 p-0 flex justify-center items-center h-screen bg-gray-100 font-sans">
+<body class="m-0 p-3 flex justify-center items-center h-screen bg-gray-100 font-sans">
 
 <!-- Notification -->
-<div x-data @notify.window="console.log($event.detail)"></div>
+<x-notification />
 
-<x-add-event/>
+<!-- Timeline -->
+<x-timeline/>
 
-<div class="flex flex-col items-center">
-    <div id="timeline" class="border border-gray-300 bg-white relative"></div>
-</div>
-
-<script src="https://d3js.org/d3.v7.min.js"></script>
-
-<script src="app.js"></script>
-
-<script src="datetime-format.js"></script>
 </body>
 </html>

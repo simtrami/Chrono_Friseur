@@ -1,14 +1,11 @@
 <?php
 
+use App\Http\Requests\StoreEventRequest;
 use Illuminate\Support\Facades\Route;
 use App\Models\Event;
 
 Route::get('/', function () {
     return view('index');
-});
-
-Route::get('/joli', function () {
-    return view('joli');
 });
 
 Route::get('/events', function () {
@@ -25,9 +22,10 @@ Route::get('/events/{id}', function ($id) {
 //     return $event;
 // });
 
-Route::post('/events',    function () {
-    $event = Event::create(request()->all());
-    return $event;
+Route::post('/events',    function (StoreEventRequest $request) {
+    $validated = $request->validated();
+    Event::create($validated);
+    return $validated;
 });
 
 Route::put('/events/{id}', function ($id) {
@@ -37,7 +35,7 @@ Route::put('/events/{id}', function ($id) {
 });
 
 Route::delete('/events/{id}', function ($id) {
-    $event = Event::find($id);
+    $event = Event::findOrFail($id);
     $event->delete();
     return response()->json(['message' => 'Event deleted successfully']);
 });
