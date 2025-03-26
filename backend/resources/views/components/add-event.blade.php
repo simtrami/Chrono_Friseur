@@ -50,8 +50,11 @@
                                     this.description= ''
                                     this.date= ''
                                 }).catch(error => {
-                                    this.$dispatch('notify', { content: `Une erreur s'est produite, vérifiez les valeurs données.`, type: 'error' })
-                                    this.errors = error.response.data.errors
+                                    if (error.response.status === 422) {
+                                        this.errors = error.response.data.errors
+                                    } else {
+                                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' })
+                                    }
                                 })
                             }
                         }"

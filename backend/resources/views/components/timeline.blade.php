@@ -28,7 +28,6 @@
                         this.events.add({
                             id: e.id,
                             content: e.name,
-                            description: e.description,
                             title: new Date(e.date).toLocaleDateString(),
                             start: e.date
                         });
@@ -40,11 +39,22 @@
                     console.error('Erreur lors du chargement des événements:', error);
                 });
         },
-        openDetails: false,
-        selectedItem: null,
+        openFlyout: false,
+        selectedItem: {
+            id: null,
+            name: null,
+            description: null,
+            date: null
+        },
         show(e) {
-            this.openDetails = true;
-            this.selectedItem = this.events.get(e.detail);
+            this.editMode = false;
+            this.openFlyout = true;
+            axios.get('/events/' + e.detail).then(response => {
+                this.selectedItem = response.data;
+            }).catch(error => {
+                this.$dispatch('notify', {type: 'error', content: `Impossible de charger l'événements.`});
+                console.error('Erreur lors du chargement :', error);
+            })
         },
         preventDelete: true,
         deleteInProgress: false,
@@ -61,7 +71,7 @@
                     .then(() => {
                         this.deleteInProgress = false;
                         this.events.remove(this.selectedItem.id);
-                        this.openDetails = false;
+                        this.openFlyout = false;
                         this.selectedItem = null;
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch((error) => {
@@ -74,6 +84,29 @@
                         }
                     })
             }
+        },
+        editMode: false,
+        formErrors: { name: [], description: [], date: [] },
+        updateEvent() {
+            this.formErrors = { name: [], description: [], date: [] };
+            axios.put('/events/' + this.selectedItem.id, this.selectedItem)
+            .then(response => {
+                this.$dispatch('notify', { content: `${response.data.name} a bien été modifié.`, type: 'success' })
+                this.events.update([{
+                    id: response.data.id,
+                    content: response.data.name,
+                    title: new Date(response.data.date).toLocaleDateString(),
+                    start: response.data.date
+                }]);
+                this.selectedItem = response.data;
+                this.editMode = false;
+            }).catch(error => {
+                if (error.response.status === 422) {
+                    this.formErrors = error.response.data.errors
+                } else {
+                    this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
+                }
+            })
         }
     }"
     @timeline-select.window="show($event)"
@@ -86,7 +119,10 @@
     <x-add-event/>
 
     <!-- Event details -->
-    <x-details x-model="openDetails"/>
+    <x-flyout x-model="openFlyout">
+        <x-events.details x-show="!editMode"/>
+        <x-events.edit x-show="editMode"/>
+    </x-flyout>
 
     <div x-cloak x-ref='timeline' class="w-full relative"></div>
 </div>

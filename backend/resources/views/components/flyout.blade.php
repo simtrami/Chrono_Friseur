@@ -30,9 +30,11 @@
                 <!-- Body -->
                 <div class="space-y-6">
                     <!-- Title -->
-                    <h2 x-dialog:title class="font-medium text-gray-800 text-xl">Détails de l'événement</h2>
+                    <h2 x-text="editMode ? `Modifier l'événement` : `Détails de l'événement`"
+                        x-dialog:title
+                        class="font-medium text-gray-800 text-xl"></h2>
 
-                    <template x-if="!selectedItem">
+                    <template x-if="!selectedItem.id">
                         <div class="space-y-3 animate-pulse">
                             <div class="rounded-md bg-gray-200/70 h-5 w-[300px]"></div>
                             <div class="rounded-md bg-gray-200/70 h-5 w-[250px]"></div>
@@ -41,27 +43,16 @@
                     </template>
 
                     <!-- Content -->
-                    <div class="flex flex-col mt-2 border-b border-gray-900/10 pb-6">
-                        <div class="row mb-2">
-                            <p x-text="selectedItem?.content" class="font-semibold text-lg"></p>
-                        </div>
-
-                        <div class="row mb-2">
-                            <p x-text="selectedItem?.start"></p>
-                        </div>
-
-                        <div class="row mb-2">
-                            <p x-text="selectedItem?.description" class="text-gray-500"></p>
-                        </div>
-                    </div>
+                    {{ $slot }}
 
                     <!-- Actions -->
-                    <div class="mt-6 flex justify-end space-x-2">
+                    <div x-show="!editMode" class="mt-6 flex justify-end space-x-2">
                         <button
+                            @click.prevent="editMode = true;"
                             type="button"
                             class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
                         >
-                            <x-icons.pencil-square/>
+                            <x-icons.pencil-square size="size-5"/>
                             <span>Modifier</span>
                         </button>
 
@@ -73,17 +64,36 @@
                             :disabled="deleteInProgress"
                         >
                             <template x-if="preventDelete && !deleteInProgress">
-                                <x-icons.trash/>
+                                <x-icons.trash size="size-5"/>
                             </template>
 
                             <template x-if="deleteInProgress">
-                                <x-icons.spinner/>
+                                <x-icons.spinner size="size-5"/>
                             </template>
 
                             <span
                                 x-show="!deleteInProgress"
                                 x-text="preventDelete ? 'Supprimer' : 'Vraiment ? :('"
                             ></span>
+                        </button>
+                    </div>
+
+                    <div x-show="editMode" class="mt-6 flex justify-end space-x-2">
+                        <button
+                            @click.prevent="editMode = false"
+                            type="button"
+                            class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
+                        >
+                            <span>Annuler</span>
+                        </button>
+
+                        <button
+                            @click.prevent="updateEvent()"
+                            type="button"
+                            class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 hover:bg-indigo-500"
+                        >
+                            <x-icons.pencil-square size="size-5"/>
+                            <span>Appliquer</span>
                         </button>
                     </div>
                 </div>
