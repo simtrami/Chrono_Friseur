@@ -14,8 +14,8 @@
         },
         init() {
             this.options.onInitialDrawComplete = () => this.loading = false;
-            this.events = new vis.DataSet();
-            this.timeline = new vis.Timeline(this.$refs.timeline, this.events, this.options);
+            this.events = new DataSet();
+            this.timeline = new Timeline(this.$refs.timeline, this.events, this.options);
             this.getEvents();
             this.timeline.on('select', function (properties) {
                 window.dispatchEvent(new CustomEvent('timeline-select', { detail: properties.items[0] }));
