@@ -34,30 +34,30 @@
                     });
                     this.timeline.setItems(this.events);
                     this.timeline.fit();
-                }).catch(error => {
+                }).catch(() => {
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
-                    console.error('Erreur lors du chargement des événements:', error);
                 });
         },
         openFlyout: false,
-        selectedItem: {
+        currentEvent: {
             id: null,
             name: null,
             description: null,
             date: null
         },
-        show(e) {
-            this.editMode = false;
+        mode: 'add',
+        show(event) {
+            this.mode = 'show';
+            this.currentEvent = { id: null, name: null, description: null, date: null };
             this.openFlyout = true;
-            axios.get('/events/' + e.detail).then(response => {
-                this.selectedItem = response.data;
-            }).catch(error => {
+            axios.get('/events/' + event.detail).then(response => {
+                this.currentEvent = response.data;
+            }).catch(() => {
                 this.$dispatch('notify', {type: 'error', content: `Impossible de charger l'événements.`});
-                console.error('Erreur lors du chargement :', error);
             })
         },
         preventDelete: true,
-        deleteInProgress: false,
+        requestInProgress: false,
         deleteEvent() {
             if (this.preventDelete) {
                 this.preventDelete = false;
@@ -66,30 +66,28 @@
                 }, 3000)
             } else {
                 this.preventDelete = true;
-                this.deleteInProgress = true;
-                axios.delete('/events/' + this.selectedItem.id)
+                this.requestInProgress = true;
+                axios.delete('/events/' + this.currentEvent.id)
                     .then(() => {
-                        this.deleteInProgress = false;
-                        this.events.remove(this.selectedItem.id);
+                        this.events.remove(this.currentEvent.id);
                         this.openFlyout = false;
-                        this.selectedItem = null;
+                        this.currentEvent = { id: null, name: null, description: null, date: null };
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch((error) => {
-                        this.deleteInProgress = false;
                         console.log(error);
                         if (error.status === 404) {
                             this.$dispatch('notify', { content: `L'événement est introuvable.`, type: 'error' })
                         } else {
                             this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' })
                         }
-                    })
+                    }).finally(() => { this.requestInProgress = false; })
             }
         },
-        editMode: false,
         formErrors: { name: [], description: [], date: [] },
         updateEvent() {
+            this.requestInProgress = true;
             this.formErrors = { name: [], description: [], date: [] };
-            axios.put('/events/' + this.selectedItem.id, this.selectedItem)
+            axios.put('/events/' + this.currentEvent.id, this.currentEvent)
             .then(response => {
                 this.$dispatch('notify', { content: `${response.data.name} a bien été modifié.`, type: 'success' })
                 this.events.update([{
@@ -98,15 +96,40 @@
                     title: new Date(response.data.date).toLocaleDateString(),
                     start: response.data.date
                 }]);
-                this.selectedItem = response.data;
-                this.editMode = false;
+                this.currentEvent = response.data;
+                this.mode = 'show';
             }).catch(error => {
                 if (error.response.status === 422) {
                     this.formErrors = error.response.data.errors
                 } else {
                     this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
                 }
-            })
+            }).finally(() => { this.requestInProgress = false; })
+        },
+        addEvent() {
+            this.requestInProgress = true;
+            this.formErrors = { name: [], description: [], date: [] };
+            axios.post('/events', {
+                name: this.currentEvent.name,
+                description: this.currentEvent.description,
+                date: this.currentEvent.date
+            }).then(response => {
+                this.events.add({
+                    id: response.data.id,
+                    content: response.data.name,
+                    title: new Date(response.data.date).toLocaleDateString(),
+                    start: response.data.date
+                });
+                this.$dispatch('notify', { content: `${response.data.name} a bien été créé.`, type: 'success' })
+                this.openFlyout = false;
+                this.currentEvent = { id: null, name: null, description: null, date: null }
+            }).catch(error => {
+                if (error.response.status === 422) {
+                    this.formErrors = error.response.data.errors
+                } else {
+                    this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' })
+                }
+            }).finally(() => { this.requestInProgress = false; })
         }
     }"
     @timeline-select.window="show($event)"
@@ -115,14 +138,23 @@
     <!-- Loading overlay -->
     <x-loading-overlay x-show="loading"/>
 
-    <!-- Add event -->
-    <x-add-event/>
-
-    <!-- Event details -->
+    <!-- Event flyout -->
     <x-flyout x-model="openFlyout">
-        <x-events.details x-show="!editMode"/>
-        <x-events.edit x-show="editMode"/>
+        <x-events.show x-show="mode === 'show'"/>
+        <x-events.form x-show="mode === 'add' || mode === 'edit'"/>
     </x-flyout>
+
+    <!-- Add event button -->
+    <div class="fixed bottom-0 right-0 pr-12 pb-12 z-10">
+        <button
+            @click="mode = 'add'; openFlyout = true; currentEvent = { id: null, name: null, description: null, date: null }"
+            type="button"
+            class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition"
+        >
+            <x-icons.plus size="size-6"/>
+            <span class="text-lg">Événement</span>
+        </button>
+    </div>
 
     <div x-cloak x-ref='timeline' class="w-full relative"></div>
 </div>

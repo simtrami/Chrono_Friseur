@@ -1,5 +1,5 @@
 <div
-    {{ $attributes->merge(['class' => 'fixed inset-0 overflow-hidden z-10']) }}
+    {{ $attributes->merge(['class' => 'fixed inset-0 overflow-hidden z-20']) }}
     x-dialog
     x-cloak>
     <!-- Overlay -->
@@ -30,11 +30,13 @@
                 <!-- Body -->
                 <div class="space-y-6">
                     <!-- Title -->
-                    <h2 x-text="editMode ? `Modifier l'événement` : `Détails de l'événement`"
-                        x-dialog:title
-                        class="font-medium text-gray-800 text-xl"></h2>
+                    <h2 x-dialog:title class="font-medium text-gray-800 text-xl">
+                        <span x-show="mode === 'show'">Détails de l'événement</span> <span x-show="mode === 'edit'">Modifier l'événement</span>
+                        <span x-show="mode === 'add'">Ajouter un événement</span>
+                    </h2>
 
-                    <template x-if="!selectedItem.id">
+                    <template x-if="!currentEvent.id && mode !== 'add'">
+                        <!-- Loading event data -->
                         <div class="space-y-3 animate-pulse">
                             <div class="rounded-md bg-gray-200/70 h-5 w-[300px]"></div>
                             <div class="rounded-md bg-gray-200/70 h-5 w-[250px]"></div>
@@ -45,10 +47,10 @@
                     <!-- Content -->
                     {{ $slot }}
 
-                    <!-- Actions -->
-                    <div x-show="!editMode" class="mt-6 flex justify-end space-x-2">
+                    <!-- Actions for show -->
+                    <div x-show="mode === 'show'" class="mt-6 flex justify-end space-x-2">
                         <button
-                            @click.prevent="editMode = true;"
+                            @click.prevent="mode = 'edit'"
                             type="button"
                             class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
                         >
@@ -60,27 +62,28 @@
                             @click.prevent="deleteEvent()"
                             type="button"
                             class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-red-600 hover:bg-red-500"
-                            :class="{'opacity-50 cursor-not-allowed': deleteInProgress, 'animate-wiggle': !preventDelete}"
-                            :disabled="deleteInProgress"
+                            :class="{'opacity-50 cursor-not-allowed': requestInProgress, 'animate-wiggle': !preventDelete}"
+                            :disabled="requestInProgress"
                         >
-                            <template x-if="preventDelete && !deleteInProgress">
+                            <template x-if="preventDelete && !requestInProgress">
                                 <x-icons.trash size="size-5"/>
                             </template>
 
-                            <template x-if="deleteInProgress">
+                            <template x-if="requestInProgress">
                                 <x-icons.spinner size="size-5"/>
                             </template>
 
                             <span
-                                x-show="!deleteInProgress"
+                                x-show="!requestInProgress"
                                 x-text="preventDelete ? 'Supprimer' : 'Vraiment ? :('"
                             ></span>
                         </button>
                     </div>
 
-                    <div x-show="editMode" class="mt-6 flex justify-end space-x-2">
+                    <!-- Actions for edit -->
+                    <div x-show="mode === 'edit'" class="mt-6 flex justify-end space-x-2">
                         <button
-                            @click.prevent="editMode = false"
+                            @click.prevent="mode = 'show'"
                             type="button"
                             class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
                         >
@@ -91,9 +94,47 @@
                             @click.prevent="updateEvent()"
                             type="button"
                             class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 hover:bg-indigo-500"
+                            :class="{'opacity-50 cursor-not-allowed': requestInProgress}"
+                            :disabled="requestInProgress"
                         >
-                            <x-icons.pencil-square size="size-5"/>
+                            <template x-if="!requestInProgress">
+                                <x-icons.pencil-square size="size-5"/>
+                            </template>
+
+                            <template x-if="requestInProgress">
+                                <x-icons.spinner size="size-5"/>
+                            </template>
+
                             <span>Appliquer</span>
+                        </button>
+                    </div>
+
+                    <!-- Actions for add -->
+                    <div x-show="mode === 'add'" class="mt-6 flex justify-end space-x-2">
+                        <button
+                            @click.prevent="$dialog.close()"
+                            type="button"
+                            class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
+                        >
+                            <span>Annuler</span>
+                        </button>
+
+                        <button
+                            @click.prevent="addEvent()"
+                            type="button"
+                            class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 hover:bg-indigo-500"
+                            :class="{'opacity-50 cursor-not-allowed': requestInProgress}"
+                            :disabled="requestInProgress"
+                        >
+                            <template x-if="!requestInProgress">
+                                <x-icons.plus size="size-5"/>
+                            </template>
+
+                            <template x-if="requestInProgress">
+                                <x-icons.spinner size="size-5"/>
+                            </template>
+
+                            <span>Ajouter</span>
                         </button>
                     </div>
                 </div>
