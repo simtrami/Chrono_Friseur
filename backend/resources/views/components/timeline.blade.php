@@ -13,12 +13,16 @@
             locale: 'fr'
         },
         init() {
-            this.options.onInitialDrawComplete = () => this.loading = false;
+            this.options.onInitialDrawComplete = () => { this.loading = false };
             this.events = new DataSet();
             this.timeline = new Timeline(this.$refs.timeline, this.events, this.options);
             this.getEvents();
-            this.timeline.on('select', function (properties) {
-                window.dispatchEvent(new CustomEvent('timeline-select', { detail: properties.items[0] }));
+            this.timeline.on('select', function (selected) {
+                if (selected.items.length > 0) {
+                    // Equivalent to `this.$dispatch('timeline-select', { detail: selected.items[0] });`
+                    // but `this.$dispatch` is not accessible here.
+                    window.dispatchEvent(new CustomEvent('timeline-select', { detail: selected.items[0] }));
+                }
             });
         },
         getEvents() {
@@ -48,13 +52,15 @@
         mode: 'add',
         show(event) {
             this.mode = 'show';
-            this.currentEvent = { id: null, name: null, description: null, date: null };
             this.openFlyout = true;
-            axios.get('/events/' + event.detail).then(response => {
-                this.currentEvent = response.data;
-            }).catch(() => {
-                this.$dispatch('notify', {type: 'error', content: `Impossible de charger l'événements.`});
-            })
+            if (this.currentEvent.id !== event.detail) {
+                this.currentEvent = { id: null, name: null, description: null, date: null };
+                axios.get('/events/' + event.detail).then(response => {
+                    this.currentEvent = response.data;
+                }).catch(() => {
+                    this.$dispatch('notify', {type: 'error', content: `Impossible de charger l'événements.`});
+                })
+            }
         },
         preventDelete: true,
         requestInProgress: false,
@@ -145,11 +151,11 @@
     </x-flyout>
 
     <!-- Add event button -->
-    <div class="fixed bottom-0 right-0 pr-12 pb-12 z-10">
+    <div class="fixed bottom-0 right-0 pr-8 pb-8 z-10 md:pr-12 md:pb-12">
         <button
             @click="mode = 'add'; openFlyout = true; currentEvent = { id: null, name: null, description: null, date: null }"
             type="button"
-            class="inline-flex items-center space-x-1 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition"
+            class="flex items-center justify-center space-x-1 whitespace-nowrap rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition"
         >
             <x-icons.plus size="size-6"/>
             <span class="text-lg">Événement</span>
