@@ -10,13 +10,11 @@ Route::get('/', function () {
 });
 
 Route::get('/events', function () {
-    $events = Event::with('tags')->get();
-    return $events;
+    return Event::with('tags')->get();
 });
 
 Route::get('/events/{id}', function ($id) {
-    $event = Event::with('tags')->find($id);
-    return $event;
+    return Event::with('tags')->find($id);
 });
 
 // Route::get('/events/{id}', function (Event $event) {
@@ -25,8 +23,7 @@ Route::get('/events/{id}', function ($id) {
 
 Route::post('/events',    function (StoreEventRequest $request) {
     $attributes = $request->validated();
-    $event = Event::create($attributes);
-    return $event;
+    return Event::create($attributes);
 });
 
 Route::put('/events/{id}', function (UpdateEventRequest $request, $id) {
@@ -40,12 +37,4 @@ Route::delete('/events/{id}', function ($id) {
     $event = Event::findOrFail($id);
     $event->delete();
     return response()->json(['message' => 'Event deleted successfully']);
-});
-
-Route::get('/eventForm', function () {
-    $id = request('id');
-    $name = request('name');
-    $description = request('description');
-    $date = request('date');
-    return view('components.eventForm', compact('id', 'name', 'description','date'));
 });

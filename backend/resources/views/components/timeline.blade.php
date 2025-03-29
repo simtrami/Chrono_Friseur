@@ -24,6 +24,10 @@
                     window.dispatchEvent(new CustomEvent('timeline-select', { detail: selected.items[0] }));
                 }
             });
+            this.timeline.on('contextmenu', function (props) {
+                props.event.preventDefault();
+                window.dispatchEvent(new CustomEvent('add-event', { detail: props }));
+            });
         },
         getEvents() {
             axios.get('/events')
@@ -36,7 +40,6 @@
                             start: e.date
                         });
                     });
-                    this.timeline.setItems(this.events);
                     this.timeline.fit();
                 }).catch(() => {
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
@@ -111,6 +114,18 @@
                 }
             }).finally(() => { this.requestInProgress = false; })
         },
+        showAddForm(e) {
+            this.mode = 'add';
+            this.openFlyout = true;
+            if (e.detail.snappedTime) {
+                console.log('Orig. '+e.detail.snappedTime);
+                console.log('Moment '+e.detail.snappedTime.format('YYYY-MM-DD HH:mm'));
+                date = e.detail.snappedTime.format('YYYY-MM-DD HH:mm');
+                this.currentEvent = { id: null, name: null, description: null, date: date };
+            } else {
+                this.currentEvent = { id: null, name: null, description: null, date: null };
+            }
+        },
         addEvent() {
             this.requestInProgress = true;
             this.formErrors = { name: [], description: [], date: [] };
@@ -138,6 +153,7 @@
         }
     }"
     @timeline-select.window="show($event)"
+    @add-event.window="showAddForm($event)"
     class="w-full h-full flex items-center bg-white"
 >
     <!-- Loading overlay -->
@@ -152,7 +168,7 @@
     <!-- Add event button -->
     <div class="fixed bottom-0 right-0 pr-8 pb-8 z-10 md:pr-12 md:pb-12">
         <button
-            @click="mode = 'add'; openFlyout = true; currentEvent = { id: null, name: null, description: null, date: null }"
+            @click="$dispatch('add-event')"
             type="button"
             class="flex items-center justify-center space-x-1 whitespace-nowrap rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition"
         >

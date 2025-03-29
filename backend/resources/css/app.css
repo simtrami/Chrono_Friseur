@@ -13,7 +13,6 @@ comme ça il est pas trop gros.
 @source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
 @source "../**/*.js";
-@source "../**/*.vue";
 
 /*Voir https://tailwindcss.com/docs/font-family*/
 @theme {
