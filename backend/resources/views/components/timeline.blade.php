@@ -19,7 +19,7 @@
             this.getEvents();
             this.timeline.on('select', function (selected) {
                 if (selected.items.length > 0) {
-                    // Equivalent to `this.$dispatch('timeline-select', { detail: selected.items[0] });`
+                    // Equivalent to `this.$dispatch('timeline-select', selected.items[0]);`
                     // but `this.$dispatch` is not accessible here.
                     window.dispatchEvent(new CustomEvent('timeline-select', { detail: selected.items[0] }));
                 }
@@ -80,7 +80,6 @@
                         this.currentEvent = { id: null, name: null, description: null, date: null };
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch((error) => {
-                        console.log(error);
                         if (error.status === 404) {
                             this.$dispatch('notify', { content: `L'événement est introuvable.`, type: 'error' })
                         } else {

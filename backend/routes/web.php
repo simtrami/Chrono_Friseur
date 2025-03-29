@@ -10,12 +10,12 @@ Route::get('/', function () {
 });
 
 Route::get('/events', function () {
-    $events = Event::all();
+    $events = Event::with('tags')->get();
     return $events;
 });
 
 Route::get('/events/{id}', function ($id) {
-    $event = Event::find($id);
+    $event = Event::with('tags')->find($id);
     return $event;
 });
 

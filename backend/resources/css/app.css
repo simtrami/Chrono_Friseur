@@ -32,6 +32,7 @@ comme ça il est pas trop gros.
     }
 }
 
+/* See https://alpinejs.dev/directives/cloak */
 [x-cloak] { display: none !important; }
 
 .vis-timeline {
