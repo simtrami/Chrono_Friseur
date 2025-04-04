@@ -50,14 +50,15 @@
             id: null,
             name: null,
             description: null,
-            date: null
+            date: null,
+            tags: []
         },
         mode: 'add',
         show(event) {
             this.mode = 'show';
             this.openFlyout = true;
             if (this.currentEvent.id !== event.detail) {
-                this.currentEvent = { id: null, name: null, description: null, date: null };
+                this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
                 axios.get('/events/' + event.detail).then(response => {
                     this.currentEvent = response.data;
                 }).catch(() => {
@@ -80,7 +81,7 @@
                     .then(() => {
                         this.events.remove(this.currentEvent.id);
                         this.openFlyout = false;
-                        this.currentEvent = { id: null, name: null, description: null, date: null };
+                        this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch((error) => {
                         if (error.status === 404) {
@@ -118,13 +119,12 @@
             this.mode = 'add';
             this.openFlyout = true;
             if (e.detail.snappedTime) {
-                console.log('Orig. '+e.detail.snappedTime);
-                console.log('Moment '+e.detail.snappedTime.format('YYYY-MM-DD HH:mm'));
                 date = e.detail.snappedTime.format('YYYY-MM-DD HH:mm');
-                this.currentEvent = { id: null, name: null, description: null, date: date };
+                this.currentEvent = { id: null, name: null, description: null, date: date, tags: [] };
             } else {
-                this.currentEvent = { id: null, name: null, description: null, date: null };
+                this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
             }
+            this.formErrors = { name: [], description: [], date: [] };
         },
         addEvent() {
             this.requestInProgress = true;
@@ -142,7 +142,7 @@
                 });
                 this.$dispatch('notify', { content: `${response.data.name} a bien été créé.`, type: 'success' })
                 this.openFlyout = false;
-                this.currentEvent = { id: null, name: null, description: null, date: null }
+                this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] }
             }).catch(error => {
                 if (error.response.status === 422) {
                     this.formErrors = error.response.data.errors

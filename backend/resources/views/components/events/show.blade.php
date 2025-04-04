@@ -1,13 +1,23 @@
-<div {{ $attributes->merge(['class' => 'flex flex-col mt-2 border-b border-gray-900/10 pb-6']) }}>
-    <div class="row mb-2">
+<div {{ $attributes->merge(['class' => 'flex flex-col my-2 space-y-2 border-b border-gray-900/10 pb-6']) }}>
+    <div class="row">
         <p x-text="currentEvent.name" class="font-semibold text-lg"></p>
     </div>
 
-    <div class="row mb-2">
+    <template x-if="currentEvent.tags.length > 0">
+        <div class="row space-x-1">
+            <template x-for="tag in currentEvent.tags" :key="tag.id">
+                <x-events.badge x-data="{ color: 'black', init() { color = this.tag?.color } }"><span
+                        x-text="tag.name?.fr"
+                    ></span></x-events.badge>
+            </template>
+        </div>
+    </template>
+
+    <div class="row">
         <p x-text="currentEvent.date"></p>
     </div>
 
-    <div class="row mb-2">
+    <div class="row">
         <p x-text="currentEvent.description" class="text-gray-500"></p>
     </div>
 </div>
