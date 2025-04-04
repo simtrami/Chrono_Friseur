@@ -14,7 +14,7 @@
     </template>
 
     <div class="row">
-        <p x-text="currentEvent.date"></p>
+        <p x-text="moment(currentEvent.date).format('llll') + ' (' + moment(currentEvent.date).fromNow() + ')'"></p>
     </div>
 
     <div class="row">
