@@ -73,9 +73,12 @@
                                 <x-icons.spinner size="size-5"/>
                             </template>
 
+                            <template x-if="!requestInProgress && !preventDelete">
+                                <x-icons.face-frown size="size-5"/>
+                            </template>
                             <span
                                 x-show="!requestInProgress"
-                                x-text="preventDelete ? 'Supprimer' : 'Vraiment ? :('"
+                                x-text="preventDelete ? 'Supprimer' : 'Vraiment ?'"
                             ></span>
                         </button>
                     </div>

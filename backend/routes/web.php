@@ -4,9 +4,14 @@ use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use Illuminate\Support\Facades\Route;
 use App\Models\Event;
+use Spatie\Tags\Tag;
 
 Route::get('/', function () {
     return view('index');
+});
+
+Route::get('/tags', function () {
+    return Tag::whereType(null)->ordered()->get();
 });
 
 Route::get('/events', function () {
@@ -14,12 +19,8 @@ Route::get('/events', function () {
 });
 
 Route::get('/events/{id}', function ($id) {
-    return Event::with('tags')->find($id);
+    return Event::with('tags')->findOrFail($id);
 });
-
-// Route::get('/events/{id}', function (Event $event) {
-//     return $event;
-// });
 
 Route::post('/events',    function (StoreEventRequest $request) {
     $attributes = $request->validated();
@@ -27,14 +28,16 @@ Route::post('/events',    function (StoreEventRequest $request) {
 });
 
 Route::put('/events/{id}', function (UpdateEventRequest $request, $id) {
-    $event = Event::findOrFail($id);
     $attributes = $request->validated();
+    $event = Event::with('tags')->findOrFail($id);
+    $event->tags()->sync(array_column($attributes['tags'], 'id'));
     $event->update($attributes);
+    $event->refresh();
     return $event;
 });
 
 Route::delete('/events/{id}', function ($id) {
     $event = Event::findOrFail($id);
     $event->delete();
-    return response()->json(['message' => 'Event deleted successfully']);
+    return response()->json(['message' => 'Événement supprimé avec succès.']);
 });

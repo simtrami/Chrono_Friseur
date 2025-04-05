@@ -2,6 +2,7 @@
     x-data="{
         loading: true,
         events: [],
+        tags: [],
         timeline: null,
         options: {
             start: '1020-01-01',
@@ -17,6 +18,7 @@
             this.events = new DataSet();
             this.timeline = new Timeline(this.$refs.timeline, this.events, this.options);
             this.getEvents();
+            this.getTags();
             this.timeline.on('select', function (selected) {
                 if (selected.items.length > 0) {
                     // Equivalent to `this.$dispatch('timeline-select', selected.items[0]);`
@@ -43,6 +45,14 @@
                     this.timeline.fit();
                 }).catch(() => {
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
+                });
+        },
+        getTags() {
+            axios.get('/tags')
+                .then(response => {
+                    this.tags = response.data;
+                }).catch(() => {
+                    this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les tags.'});
                 });
         },
         openFlyout: false,
@@ -92,10 +102,10 @@
                     }).finally(() => { this.requestInProgress = false; })
             }
         },
-        formErrors: { name: [], description: [], date: [] },
+        formErrors: { name: [], description: [], date: [], tags: [] },
         updateEvent() {
             this.requestInProgress = true;
-            this.formErrors = { name: [], description: [], date: [] };
+            this.formErrors = { name: [], description: [], date: [], tags: [] };
             axios.put('/events/' + this.currentEvent.id, this.currentEvent)
             .then(response => {
                 this.$dispatch('notify', { content: `${response.data.name} a bien été modifié.`, type: 'success' })
@@ -124,11 +134,11 @@
             } else {
                 this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
             }
-            this.formErrors = { name: [], description: [], date: [] };
+            this.formErrors = { name: [], description: [], date: [], tags: [] };
         },
         addEvent() {
             this.requestInProgress = true;
-            this.formErrors = { name: [], description: [], date: [] };
+            this.formErrors = { name: [], description: [], date: [], tags: [] };
             axios.post('/events', {
                 name: this.currentEvent.name,
                 description: this.currentEvent.description,

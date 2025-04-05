@@ -19,7 +19,7 @@ comme ça il est pas trop gros.
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --animate-wiggle: wiggle 0.5s ease-in-out infinite;
+    --animate-wiggle: wiggle 0.3s ease-in-out infinite;
     @keyframes wiggle {
         0%,
         100% {
@@ -31,9 +31,14 @@ comme ça il est pas trop gros.
     }
 }
 
-/* See https://alpinejs.dev/directives/cloak */
-[x-cloak] { display: none !important; }
+@layer components {
+    /* See https://alpinejs.dev/directives/cloak */
+    [x-cloak] {
+        display: none !important;
+    }
 
-.vis-timeline {
-    border: 0 !important;
+    .vis-timeline {
+        border: 0 !important;
+    }
 }
+
