@@ -29,7 +29,7 @@
 >
     <div class="flex flex-col my-2 space-y-2 max-w-2xl text-gray-500 border-b border-gray-900/10 pb-6">
         <!-- Name -->
-        <div class="row">
+        <div class="">
             <label for="name" class="block text-sm/6 font-medium">Nom</label>
             <div class="mt-2">
                 <input x-model="currentEvent.name" type="text" name="name" id="name"
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Tags -->
-        <div class="row">
+        <div>
             <label for="tags" class="text-sm font-medium select-none">Tags</label>
 
             <div class="mt-2">
@@ -54,9 +54,10 @@
 
                     <!-- Listbox Button -->
                     <button x-listbox:button
-                            class="group flex w-64 items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm"
+                            class="group flex w-full items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
                     >
-                        <span x-text="label" class="truncate" :class="{ 'text-gray-400': $listbox.value.length === 0 }"
+                        <span x-text="label" class="truncate text-base text-gray-900 sm:text-sm/6"
+                              :class="{ '!text-gray-400': $listbox.value.length === 0 }"
                         ></span>
 
                         <!-- Heroicons up/down -->
@@ -73,7 +74,7 @@
 
                     <!-- Listbox Options -->
                     <ul x-listbox:options x-cloak
-                        class="absolute right-0 z-10 mt-2 max-h-80 w-full overflow-y-scroll overscroll-contain rounded-lg border border-gray-200 bg-white p-1.5 shadow-sm outline-none"
+                        class="absolute right-0 z-10 mt-2 max-h-80 w-full overflow-y-scroll overscroll-contain rounded-md border border-gray-300 bg-white p-1.5 shadow-sm outline-none"
                     >
                         <template x-if="tags.length === 0">
                             <li class="text-gray-400 cursor-not-allowed group flex w-full items-center rounded-md px-2 py-1.5 transition-colors">
@@ -94,7 +95,7 @@
                                 :disabled="false"
                                 :class="{
                             'bg-gray-100': $listboxOption.isActive,
-                            'text-gray-800': ! $listboxOption.isActive && ! $listboxOption.isDisabled,
+                            'text-gray-900': ! $listboxOption.isActive && ! $listboxOption.isDisabled,
                             'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled,
                         }"
                                 class="group flex w-full cursor-default items-center rounded-md px-2 py-1.5 transition-colors"
@@ -123,7 +124,7 @@
         </div>
 
         <!-- Description -->
-        <div class="row">
+        <div>
             <label for="description" class="block text-sm/6 font-medium">Description</label>
             <div class="mt-2">
                 <textarea x-model="currentEvent.description" id="description" name="description"
@@ -136,7 +137,7 @@
         </div>
 
         <!-- Date -->
-        <div class="row">
+        <div>
             <label for="picker" class="text-sm font-medium select-none">Date</label>
             <div class="mt-2">
                 <input x-ref="picker" x-model="currentEvent.date" id="picker" type="text" name="date"
