@@ -6,9 +6,9 @@
     <template x-if="currentEvent.tags.length > 0">
         <div class="row space-x-1">
             <template x-for="tag in currentEvent.tags" :key="tag.id">
-                <x-events.badge x-data="{ color: 'black', init() { color = this.tag?.color } }"><span
-                        x-text="tag.name?.fr"
-                    ></span></x-events.badge>
+                <x-tags.badge>
+                    <span x-text="tag.name?.fr"></span>
+                </x-tags.badge>
             </template>
         </div>
     </template>
