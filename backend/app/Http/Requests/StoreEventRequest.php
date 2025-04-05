@@ -29,7 +29,9 @@ class StoreEventRequest extends FormRequest
             'date' => [
                 'required',
                 Rule::date()->format('Y-m-d H:i'),
-            ]
+            ],
+            'tags' => 'nullable|array',
+            'tags.*.id' => 'distinct|exists:tags',
         ];
     }
 }

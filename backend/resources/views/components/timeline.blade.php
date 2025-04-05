@@ -20,6 +20,7 @@
             this.getEvents();
             this.getTags();
             this.timeline.on('select', function (selected) {
+                // If the selection is empty, we don't want to do anything.
                 if (selected.items.length > 0) {
                     // Equivalent to `this.$dispatch('timeline-select', selected.items[0]);`
                     // but `this.$dispatch` is not accessible here.
@@ -142,7 +143,8 @@
             axios.post('/events', {
                 name: this.currentEvent.name,
                 description: this.currentEvent.description,
-                date: this.currentEvent.date
+                date: this.currentEvent.date,
+                tags: this.currentEvent.tags
             }).then(response => {
                 this.events.add({
                     id: response.data.id,

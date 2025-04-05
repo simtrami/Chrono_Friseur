@@ -24,7 +24,10 @@ Route::get('/events/{id}', function ($id) {
 
 Route::post('/events',    function (StoreEventRequest $request) {
     $attributes = $request->validated();
-    return Event::create($attributes);
+    $event = Event::create($attributes);
+    $event->tags()->sync(array_column($attributes['tags'], 'id'));
+    $event->load('tags');
+    return $event;
 });
 
 Route::put('/events/{id}', function (UpdateEventRequest $request, $id) {
