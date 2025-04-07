@@ -1,68 +1,44 @@
 <?php
 
-use App\Http\Requests\StoreEventRequest;
-use App\Http\Requests\StoreTagRequest;
-use App\Http\Requests\UpdateEventRequest;
-use App\Http\Requests\UpdateTagRequest;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
-use App\Models\Event;
-use Spatie\Tags\Tag;
 
 Route::get('/', function () {
     return view('index');
 });
 
-Route::get('/tags', function () {
-    return Tag::whereType(null)->ordered()->get();
-});
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| RESTful routes for Event and Tag resources.
+|
+*/
 
-Route::post('/tags', function (StoreTagRequest $request) {
-    $attributes = $request->validated();
-    $tag = Tag::create($attributes);
-    return $tag;
-});
+/**
+ * Registers RESTful routes for the Event and Tag resources,
+ * mapping them to the methods in their respective controller class.
+ */
+Route::apiResources([
+    /*
+ * Available routes for events and the respective function in the controller:
+ *   GET /events - index (list all events)
+ *   GET /events/{event} - show (view a single event)
+ *   POST /events - store (create a new event)
+ *   PUT/PATCH /events/{event} - update (update an existing event)
+ *   DELETE /events/{event} - destroy (delete an event)
+ */
+    'events' => EventController::class,
 
-Route::put('/tags/{id}', function (UpdateTagRequest $request, $id) {
-    $attributes = $request->validated();
-    $tag = Tag::findOrFail($id);
-    $tag->update($attributes);
-    $tag->refresh();
-    return $tag;
-});
-
-Route::delete('/tags/{id}', function ($id) {
-    $tag = Tag::findOrFail($id);
-    $tag->delete();
-    return response()->json(['message' => 'Tag supprimé avec succès.']);
-});
-
-Route::get('/events', function () {
-    return Event::with('tags')->get();
-});
-
-Route::post('/events', function (StoreEventRequest $request) {
-    $attributes = $request->validated();
-    $event = Event::create($attributes);
-    $event->tags()->sync(array_column($attributes['tags'], 'id'));
-    $event->load('tags');
-    return $event;
-});
-
-Route::get('/events/{id}', function ($id) {
-    return Event::with('tags')->findOrFail($id);
-});
-
-Route::put('/events/{id}', function (UpdateEventRequest $request, $id) {
-    $attributes = $request->validated();
-    $event = Event::with('tags')->findOrFail($id);
-    $event->tags()->sync(array_column($attributes['tags'], 'id'));
-    $event->update($attributes);
-    $event->refresh();
-    return $event;
-});
-
-Route::delete('/events/{id}', function ($id) {
-    $event = Event::findOrFail($id);
-    $event->delete();
-    return response()->json(['message' => 'Événement supprimé avec succès.']);
-});
+    /*
+ * Available routes for tags and the respective function in the controller:
+ *   GET /tags - index (list all tags)
+ *   GET /tags/{tag} - show (view a single tag)
+ *   POST /tags - store (create a new tag)
+ *   PUT/PATCH /tags/{tag} - update (update an existing tag)
+ *   DELETE /tags/{tag} - destroy (delete a tag)
+ */
+    'tags' => TagController::class,
+]);

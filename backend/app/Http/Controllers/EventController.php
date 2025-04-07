@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Models\Event;
 
 class EventController extends Controller
 {
@@ -13,15 +13,7 @@ class EventController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return Event::with('tags')->get();
     }
 
     /**
@@ -29,7 +21,12 @@ class EventController extends Controller
      */
     public function store(StoreEventRequest $request)
     {
-        //
+        $attributes = $request->validated();
+        $event = Event::create($attributes);
+        $event->tags()->sync(array_column($attributes['tags'], 'id'));
+        $event->loadMissing('tags:id,name,color');
+
+        return $event;
     }
 
     /**
@@ -37,15 +34,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Event $event)
-    {
-        //
+        return $event->loadMissing('tags:id,name,color');
     }
 
     /**
@@ -53,7 +42,12 @@ class EventController extends Controller
      */
     public function update(UpdateEventRequest $request, Event $event)
     {
-        //
+        $attributes = $request->validated();
+        $event->tags()->sync(array_column($attributes['tags'], 'id'));
+        $event->update($attributes);
+        $event->loadMissing('tags:id,name,color');
+
+        return $event;
     }
 
     /**
@@ -61,6 +55,8 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        //
+        $event->delete();
+
+        return response()->json(['message' => 'Événement supprimé avec succès.']);
     }
 }
