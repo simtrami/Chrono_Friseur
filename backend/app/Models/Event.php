@@ -30,5 +30,4 @@ class Event extends Model
             'date' => 'datetime:Y-m-d H:i',
         ];
     }
-
 }

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTagRequest extends FormRequest
 {
-
     public function authorize(): bool
     {
         // TODO: changer lors de l'implémentation de User
