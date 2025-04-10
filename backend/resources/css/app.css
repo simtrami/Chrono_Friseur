@@ -13,7 +13,6 @@ comme ça il est pas trop gros.
 @source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
 @source "../**/*.js";
-@source "../**/*.vue";
 
 /*Voir https://tailwindcss.com/docs/font-family*/
 @theme {
@@ -32,6 +31,7 @@ comme ça il est pas trop gros.
     }
 }
 
+/* See https://alpinejs.dev/directives/cloak */
 [x-cloak] { display: none !important; }
 
 .vis-timeline {
