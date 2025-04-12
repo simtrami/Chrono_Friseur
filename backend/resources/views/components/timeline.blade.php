@@ -11,7 +11,32 @@
             margin: {
                 item: 20
             },
-            locale: 'fr'
+            locale: 'fr',
+            xss: {
+                filterOptions: {
+                    whiteList: {
+                        h1: ['class'],
+                        ul: ['class'],
+                        li: ['class', 'style', 'title'],
+                        span: ['class', 'style', 'title']
+                    }
+                }
+            },
+            template: function (item, element, data) {
+                let html = `<h1>${item.content}</h1>`;
+                if (item.tags.length > 0) {
+                        html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
+                    item.tags.forEach(tag => {
+                        html += `
+                            <li class='inline-flex size-2 h-2 w-2'>
+                                <span class='size-2 rounded-full shadow-sm hover:scale-150 transition'
+                                      style='background-color: ${tag.color}' title='${tag.name}'></span>
+                            </li>`;
+                    })
+                        html += '</ul>';
+                }
+                return html;
+            }
         },
         init() {
             this.options.onInitialDrawComplete = () => { this.loading = false };
@@ -41,7 +66,14 @@
                             id: e.id,
                             content: e.name,
                             title: new Date(e.date).toLocaleDateString(),
-                            start: e.date
+                            start: e.date,
+                            tags: e.tags.map(t => {
+                                return {
+                                    id: t.id,
+                                    name: t.name.fr,
+                                    color: t.color
+                                }
+                            })
                         });
                     });
                     this.timeline.fit();
@@ -121,7 +153,14 @@
                         id: response.data.id,
                         content: response.data.name,
                         title: new Date(response.data.date).toLocaleDateString(),
-                        start: response.data.date
+                        start: response.data.date,
+                        tags: response.data.tags.map(t => {
+                            return {
+                                id: t.id,
+                                name: t.name.fr,
+                                color: t.color
+                            }
+                        })
                     }]);
                     this.currentEvent = response.data;
                     this.mode = 'showEvent';

@@ -40,5 +40,24 @@ comme ça il est pas trop gros.
     .vis-timeline {
         border: 0 !important;
     }
-}
 
+    .vis-item.vis-box {
+        border-radius: var(--radius-md) !important;
+    }
+
+    .vis-item {
+        border-color:     var(--color-slate-200) !important;
+        background-color: var(--color-slate-200) !important;
+        color:            var(--color-gray-900) !important;
+    }
+
+    .vis-item.vis-selected {
+        border-color:     var(--color-indigo-500) !important;
+        background-color: var(--color-indigo-500) !important;
+        color:            var(--color-white) !important;
+    }
+
+    .vis-item-content {
+        position: relative;
+    }
+}
