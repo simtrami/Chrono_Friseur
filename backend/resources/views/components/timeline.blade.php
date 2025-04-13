@@ -15,7 +15,7 @@
             xss: {
                 filterOptions: {
                     whiteList: {
-                        h1: ['class'],
+                        h1: ['class', 'title'],
                         ul: ['class'],
                         li: ['class', 'style', 'title'],
                         span: ['class', 'style', 'title']
@@ -23,7 +23,7 @@
                 }
             },
             template: function (item, element, data) {
-                let html = `<h1>${item.content}</h1>`;
+                let html = `<h1 title='${moment(item.start).format('llll')}'>${item.content}</h1>`;
                 if (item.tags.length > 0) {
                         html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
                     item.tags.forEach(tag => {
@@ -65,7 +65,6 @@
                         this.events.add({
                             id: e.id,
                             content: e.name,
-                            title: new Date(e.date).toLocaleDateString(),
                             start: e.date,
                             tags: e.tags.map(t => {
                                 return {
@@ -152,7 +151,6 @@
                     this.events.update([{
                         id: response.data.id,
                         content: response.data.name,
-                        title: new Date(response.data.date).toLocaleDateString(),
                         start: response.data.date,
                         tags: response.data.tags.map(t => {
                             return {
@@ -195,7 +193,6 @@
                     this.events.add({
                         id: response.data.id,
                         content: response.data.name,
-                        title: new Date(response.data.date).toLocaleDateString(),
                         start: response.data.date
                     });
                     this.openEventFlyout = false;
