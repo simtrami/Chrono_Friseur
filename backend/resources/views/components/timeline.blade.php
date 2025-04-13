@@ -171,6 +171,8 @@
                 }).finally(() => { this.requestInProgress = false; })
         },
         showAddForm(e) {
+            // Remove focus on the button because the focus must not be hidden from assistive technology users.
+            document.activeElement.blur();
             this.mode = 'addEvent';
             this.openEventFlyout = true;
             if (e.detail.snappedTime) {
@@ -207,6 +209,8 @@
         },
         openTagFlyout: false,
         listTags(event) {
+            // Remove focus on the button because the focus must not be hidden from assistive technology users.
+            document.activeElement.blur();
             this.mode = 'listTag';
             this.openTagFlyout = true;
         },
