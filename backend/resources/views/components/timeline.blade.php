@@ -326,23 +326,21 @@
 
     <div class="fixed flex space-x-4 bottom-0 right-0 pr-8 pb-8 z-10 md:pr-12 md:pb-12">
         <!-- List tags button -->
-        <button
-            @click="$dispatch('list-tags')"
-            type="button"
-            class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+        <button x-tooltip="'Gestion des tags'"
+                @click="$dispatch('list-tags')" type="button"
+                class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
         >
             <x-icons.solid-tag size="size-6"/>
-
-            <span class="sr-only">Gestion des tags</span>
         </button>
 
         <!-- Add event button -->
-        <button @click="$dispatch('add-event')" type="button"
+        <button x-tooltip="'Ajouter un événement'"
+                @click="$dispatch('add-event')" type="button"
                 class="flex items-center justify-center space-x-1 whitespace-nowrap h-min rounded-full bg-indigo-600 px-4 py-3 text-base font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
         >
             <x-icons.plus size="size-6"/>
 
-            <span class="sr-only">Ajouter un événement</span> <span aria-hidden="true">Événement</span>
+            <span aria-hidden="true">Événement</span>
         </button>
     </div>
 </div>

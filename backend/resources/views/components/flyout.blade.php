@@ -21,7 +21,7 @@
             <div class="h-full flex flex-col bg-white shadow-lg overflow-y-auto p-8">
                 <!-- Close Button -->
                 <div class="absolute right-0 top-0 mr-4 mt-4">
-                    <button @click="$dialog.close()" type="button"
+                    <button @click="$dialog.close()" type="button" id="close-flyout"
                             class="relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-transparent p-1.5 font-medium text-gray-400 hover:bg-gray-800/10 hover:text-gray-800"
                     >
                         <span class="sr-only">Fermer le panneau</span>

@@ -19,5 +19,29 @@
 <!-- Timeline -->
 <x-timeline/>
 
+<script>
+
+
+    document.addEventListener('alpine:init', () => {
+        // Magic: $tooltip
+        Alpine.magic('tooltip', el => message => {
+            let instance = window.tippy(el, {content: message, trigger: 'manual', theme: 'light'})
+
+            instance.show()
+
+            setTimeout(() => {
+                instance.hide()
+
+                setTimeout(() => instance.destroy(), 150)
+            }, 2000)
+        })
+
+        // Directive: x-tooltip
+        Alpine.directive('tooltip', (el, {expression}, {evaluate}) => {
+            window.tippy(el, {content: evaluate(expression), theme: 'light', arrow: false, animation: 'scale-subtle'})
+        })
+    })
+</script>
+
 </body>
 </html>
