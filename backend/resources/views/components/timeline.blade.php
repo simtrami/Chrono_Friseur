@@ -27,10 +27,10 @@
                 let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('llll')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
                     html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
-                    html += `<template x-for='tag in events.get(${item.id}).tags' :key='tag.id'>`;
+                    html += `<template x-for='tag in events.get(${item.id})?.tags' :key='tag?.id'>`;
                     html += `<li class='inline-flex size-2 h-2 w-2'>
-                                 <span x-tooltip='tags.get(tag.id).name.fr'
-                                       :style='\`background-color: \${tags.get(tag.id).color}\`'
+                                 <span x-tooltip='tags.get(tag.id)?.name.fr'
+                                       :style='\`background-color: \${tags.get(tag.id)?.color}\`'
                                        class='size-2 rounded-full shadow-sm hover:scale-150 transition'
                                  ></span>
                              </li>`;
@@ -56,39 +56,33 @@
                 window.dispatchEvent(new CustomEvent('add-event', { detail: props }));
             });
         },
-        getEvents() {
-            axios.get('/events')
-                .then(response => {
-                    this.events.clear();
-                    response.data.forEach(e => {
-                        this.events.add({
-                            id: e.id,
-                            content: e.name,
-                            start: e.date,
-                            name: e.name,
-                            description: e.description,
-                            date: e.date,
-                            tags: e.tags.map(t => this.tags.get(t.id))
-                        });
-                    });
-                    this.timeline.fit();
-                }).catch(() => {
-                    this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
-                });
-        },
         tagRequestInProgress: { 0: false },
         preventTagDelete: { 0: true },
+        makeTagData(tag) {
+            return {
+                id: tag.id,
+                color: tag.color,
+                name: { fr: tag.name.fr }
+            }
+        },
+        makeEventData(event) {
+            return {
+                id: event.id,
+                content: event.name,
+                start: event.date,
+                name: event.name,
+                description: event.description,
+                date: event.date,
+                tags: event.tags.map(t => this.tags.get(t.id))
+            };
+        },
         getData() {
             // Get tags then get events
             this.tags.clear();
             axios.get('/tags')
                 .then(response => {
                     response.data.forEach(t => {
-                        this.tags.add({
-                            id: t.id,
-                            color: t.color,
-                            name: { fr: t.name.fr }
-                        });
+                        this.tags.add(this.makeTagData(t));
                         this.tagRequestInProgress[t.id] = false;
                         this.preventTagDelete[t.id] = true;
                     })
@@ -97,8 +91,27 @@
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les tags.'});
                 });
         },
+        getEvents() {
+            axios.get('/events')
+                .then(response => {
+                    this.events.clear();
+                    response.data.forEach(e => {
+                        this.events.add(this.makeEventData(e));
+                    });
+                    this.timeline.fit();
+                }).catch(() => {
+                    this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
+                });
+        },
         openEventFlyout: false,
-        currentEvent: {
+        selectedEvent: {
+            id: null,
+            name: null,
+            description: null,
+            date: null,
+            tags: []
+        },
+        formEvent: {
             id: null,
             name: null,
             description: null,
@@ -109,24 +122,45 @@
         showEvent(event) {
             this.mode = 'showEvent';
             this.openEventFlyout = true;
-            if (this.currentEvent.id !== event.detail) {
+            if (this.selectedEvent.id !== event.detail) {
                 var e = this.events.get(event.detail);
-                this.currentEvent = {
+                this.selectedEvent = {
                     id: e.id,
                     name: e.name,
                     description: e.description,
                     date: e.date,
                     tags: e.tags
                 };
-                console.log(this.currentEvent)
-                for (t in this.currentEvent.tags) {
-                    console.log(t)
-                }
             }
+        },
+        showEditEvent() {
+            this.mode = 'editEvent';
+            if (this.formEvent.id !== this.selectedEvent.id) {
+                var e = this.events.get(this.selectedEvent.id);
+                this.formEvent = {
+                    id: e.id,
+                    name: e.name,
+                    description: e.description,
+                    date: e.date,
+                    tags: e.tags
+                };
+            }
+        },
+        cancelEditEvent() {
+            this.mode = 'showEvent';
+            var e = this.events.get(this.selectedEvent.id);
+            this.formEvent = {
+                id: e.id,
+                name: e.name,
+                description: e.description,
+                date: e.date,
+                tags: e.tags
+            };
         },
         preventEventDelete: true,
         eventRequestInProgress: false,
         deleteEvent() {
+            // Must execute this action twice in 3s to effectively delete.
             if (this.preventEventDelete) {
                 this.preventEventDelete = false;
                 setTimeout(() => {
@@ -135,10 +169,10 @@
             } else {
                 this.preventEventDelete = true;
                 this.eventRequestInProgress = true;
-                axios.delete('/events/' + this.currentEvent.id)
+                axios.delete('/events/' + this.selectedEvent.id)
                     .then(() => {
-                        this.events.remove(this.currentEvent.id);
-                        this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
+                        this.events.remove(this.selectedEvent.id);
+                        this.selectedEvent = { id: null, name: null, description: null, date: null, tags: [] };
                         this.openEventFlyout = false;
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch(error => {
@@ -154,18 +188,10 @@
         updateEvent() {
             this.eventRequestInProgress = true;
             this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
-            axios.put('/events/' + this.currentEvent.id, this.currentEvent)
+            axios.put('/events/' + this.formEvent.id, this.formEvent)
                 .then(response => {
-                    this.events.updateOnly({
-                        id: response.data.id,
-                        content: response.data.name,
-                        start: response.data.date,
-                        name: response.data.name,
-                        description: response.data.description,
-                        date: response.data.date,
-                        tags: response.data.tags.map(t => this.tags.get(t.id))
-                    });
-                    this.currentEvent = this.events.get(response.data.id);
+                    this.events.updateOnly(this.makeEventData(response.data));
+                    this.selectedEvent = this.events.get(response.data.id);
                     this.mode = 'showEvent';
                 }).catch(error => {
                     if (error.response.status === 422) {
@@ -182,32 +208,20 @@
             this.openEventFlyout = true;
             if (e.detail.snappedTime) {
                 date = e.detail.snappedTime.format('YYYY-MM-DD HH:mm');
-                this.currentEvent = { id: null, name: null, description: null, date: date, tags: [] };
+                this.formEvent = { id: null, name: null, description: null, date: date, tags: [] };
             } else {
-                this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
+                this.formEvent = { id: null, name: null, description: null, date: null, tags: [] };
             }
             this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
         },
         addEvent() {
             this.eventRequestInProgress = true;
             this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
-            axios.post('/events', {
-                    name: this.currentEvent.name,
-                    description: this.currentEvent.description,
-                    date: this.currentEvent.date,
-                    tags: this.currentEvent.tags
-                }).then(response => {
-                    this.events.add({
-                        id: response.data.id,
-                        content: response.data.name,
-                        start: response.data.date,
-                        name: response.data.name,
-                        description: response.data.description,
-                        date: response.data.date,
-                        tags: response.data.tags.map(t => this.tags.get(t.id))
-                    });
+            axios.post('/events', this.formEvent)
+                .then(response => {
+                    this.events.add(this.makeEventData(response.data));
                     this.openEventFlyout = false;
-                    this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] }
+                    this.formEvent = { id: null, name: null, description: null, date: null, tags: [] }
                 }).catch(error => {
                     if (error.response.status === 422) {
                         this.eventFormErrors = error.response.data.errors
@@ -224,6 +238,7 @@
             this.openTagFlyout = true;
         },
         deleteTag(tag) {
+            // Must execute this action twice in 3s to effectively delete.
             if (this.preventTagDelete[tag.id]) {
                 this.preventTagDelete[tag.id] = false;
                 setTimeout(() => {
@@ -233,8 +248,18 @@
                 this.preventTagDelete[tag.id] = true;
                 this.tagRequestInProgress[tag.id] = true;
                 axios.delete('/tags/' + tag.id)
-                    .then(() => {
+                    .then(response => {
                         this.tags.remove(tag.id);
+                        // Update events which had this tag
+                        if (response.data.affected_events) {
+                            response.data.affected_events.forEach(e => {
+                                this.events.updateOnly(this.makeEventData(e));
+                            })
+                        }
+                        // Reset possible copies of an event which had this tag
+                        this.selectedEvent = { id: null, name: null, description: null, date: null, tags: [] };
+                        this.formEvent = { id: null, name: null, description: null, date: null, tags: [] };
+
                         this.$dispatch('notify', { content: `Le tag a bien été supprimé.`, type: 'success' });
                     }).catch(error => {
                         if (error.status === 404) {
@@ -248,32 +273,28 @@
                     })
             }
         },
-        currentTag: {
+        formTag: {
             id: null,
             name: { fr: null },
             color: '#000000'
         },
+        tagFormErrors: { name: [], color: [] },
         showAddTag() {
             this.mode = 'addTag';
-            this.currentTag = { id: 0, name: { fr: '' }, color: '#000000' };
+            this.formTag = { id: 0, name: { fr: '' }, color: '#000000' };
             this.tagFormErrors = { name: [], color: [] };
         },
         showEditTag(tag) {
             this.mode = 'editTag';
-            this.currentTag = { id: tag.id, name: { fr: tag.name.fr }, color: tag.color };
+            this.formTag = { id: tag.id, name: { fr: tag.name.fr }, color: tag.color };
             this.tagFormErrors = { name: [], color: [] };
         },
-        tagFormErrors: { name: [], color: [] },
         updateTag() {
-            this.tagRequestInProgress[this.currentTag.id] = true;
+            this.tagRequestInProgress[this.formTag.id] = true;
             this.tagFormErrors = { name: [], color: [] };
-            axios.put('/tags/' + this.currentTag.id, this.currentTag)
+            axios.put('/tags/' + this.formTag.id, this.formTag)
                 .then(response => {
-                    this.tags.updateOnly({
-                        id: response.data.id,
-                        color: response.data.color,
-                        name: { fr: response.data.name.fr }
-                    });
+                    this.tags.updateOnly(this.makeTagData(response.data));
                     this.mode = 'listTags';
                 }).catch(error => {
                     if (error.response.status === 422) {
@@ -281,18 +302,14 @@
                     } else {
                         this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
                     }
-                }).finally(() => { this.tagRequestInProgress[this.currentTag.id] = false; })
+                }).finally(() => { this.tagRequestInProgress[this.formTag.id] = false; })
         },
         addTag() {
-            this.tagRequestInProgress[this.currentTag.id] = true;
+            this.tagRequestInProgress[this.formTag.id] = true;
             this.tagFormErrors = { name: [], color: [] };
-            axios.post('/tags', this.currentTag)
+            axios.post('/tags', this.formTag)
                 .then(response => {
-                    this.tags.add({
-                        id: response.data.id,
-                        color: response.data.color,
-                        name: { fr: response.data.name.fr }
-                    });
+                    this.tags.add(this.makeTagData(response.data));
                     this.tagRequestInProgress[response.data.id] = false;
                     this.preventTagDelete[response.data.id] = true;
                     this.mode = 'listTags';
@@ -302,7 +319,7 @@
                     } else {
                         this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' });
                     }
-                }).finally(() => { this.tagRequestInProgress[this.currentTag.id] = false; })
+                }).finally(() => { this.tagRequestInProgress[this.formTag.id] = false; })
         }
     }"
     @timeline-select.window="showEvent($event)"
@@ -317,8 +334,8 @@
 
     <!-- Event flyout -->
     <x-flyout x-model="openEventFlyout">
-        <x-events.show x-show="currentEvent.id && mode === 'showEvent'"/>
-        <x-events.form x-show="(currentEvent.id && mode === 'editEvent') || mode === 'addEvent'"/>
+        <x-events.show x-show="selectedEvent.id && mode === 'showEvent'"/>
+        <x-events.form x-show="(formEvent.id && mode === 'editEvent') || mode === 'addEvent'"/>
     </x-flyout>
 
     <!-- Tag flyout -->

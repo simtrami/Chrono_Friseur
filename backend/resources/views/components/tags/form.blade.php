@@ -10,7 +10,7 @@
         }
     }"
     @submit.prevent="submit()"
-    :id="`form-tag-${currentTag.id ?? 'add'}`"
+    :id="`form-tag-${formTag.id ?? 'add'}`"
     class="flex flex-col w-full"
 >
     <div class="flex items-center justify-between w-full text-gray-800">
@@ -19,7 +19,7 @@
             <div class="flex">
                 <label for="color" class="sr-only">Couleur</label>
 
-                <input x-model="currentTag.color" type="color" name="color" id="color"
+                <input x-model="formTag.color" type="color" name="color" id="color"
                        class="block w-5 h-8 bg-transparent outline-0 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
                 >
             </div>
@@ -28,7 +28,7 @@
             <div class="flex">
                 <label for="name" class="sr-only">Nom</label>
 
-                <input x-model="currentTag.name.fr" type="text" name="name" id="name" placeholder="Nom"
+                <input x-model="formTag.name.fr" type="text" name="name" id="name" placeholder="Nom"
                        class="block w-full rounded-md bg-white px-3 py-1 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 >
             </div>
@@ -41,15 +41,15 @@
                 <x-icons.cross size="size-5"/>
             </button>
 
-            <button x-tooltip="'Appliquer'" type="submit" :disabled="tagRequestInProgress[currentTag.id]"
+            <button x-tooltip="'Appliquer'" type="submit" :disabled="tagRequestInProgress[formTag.id]"
                     class="relative flex items-center justify-center whitespace-nowrap rounded-full p-1.5 text-indigo-500 font-semibold outline-0 outline-transparent hover:text-white hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 transition"
-                    :class="{'opacity-50 cursor-not-allowed': tagRequestInProgress[currentTag.id]}"
+                    :class="{'opacity-50 cursor-not-allowed': tagRequestInProgress[formTag.id]}"
             >
-                <template x-if="!tagRequestInProgress[currentTag.id]">
+                <template x-if="!tagRequestInProgress[formTag.id]">
                 <x-icons.check size="size-5"/>
                 </template>
 
-                <template x-if="tagRequestInProgress[currentTag.id]">
+                <template x-if="tagRequestInProgress[formTag.id]">
                 <x-icons.spinner size="size-5"/>
                 </template>
             </button>

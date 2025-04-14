@@ -1,6 +1,6 @@
 @use('Illuminate\Support\Facades\Vite')
 
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="fr">
 <head>
     <title>Frise Chronologique Interactive</title>
@@ -14,7 +14,7 @@
 <body class="m-0 p-3 flex justify-center items-center h-screen bg-gray-100 font-sans">
 
 <!-- Notification -->
-<x-notification />
+<x-notification/>
 
 <!-- Timeline -->
 <x-timeline/>
@@ -37,8 +37,15 @@
         })
 
         // Directive: x-tooltip
-        Alpine.directive('tooltip', (el, {expression}, {evaluate}) => {
-            window.tippy(el, {content: evaluate(expression), theme: 'light', arrow: false, animation: 'scale-subtle'})
+        Alpine.directive('tooltip', (el, {expression}, {evaluateLater, effect}) => {
+            // Function to evaluate expression reactively, ie. the message will change when the evaluated value changes
+            // See: https://alpinejs.dev/advanced/extending#introducing-reactivity
+            let showTooltip = evaluateLater(expression);
+            effect(() => {
+                showTooltip(message => {
+                    window.tippy(el, {content: message, theme: 'light', arrow: false, animation: 'scale-subtle'})
+                })
+            });
         })
     })
 </script>

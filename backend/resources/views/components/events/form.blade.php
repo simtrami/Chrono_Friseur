@@ -13,16 +13,16 @@
                 inline: true,
                 locale: 'fr',
                 onChange: (date, dateString) => {
-                    this.currentEvent.date = dateString
+                    this.formEvent.date = dateString
                 }
             })
-            this.$watch('currentEvent', (event) => this.picker.setDate(event.date))
+            this.$watch('formEvent', (event) => this.picker.setDate(event.date))
         },
         get label(){
-            if(this.currentEvent.tags.length === 0){
+            if(this.formEvent.tags.length === 0){
                 return 'Choisir des tags...';
             }
-            return this.currentEvent.tags.length === 1 ? this.currentEvent.tags[0].name.fr : `${this.currentEvent.tags.length} sélectionnés`;
+            return this.formEvent.tags.length === 1 ? this.formEvent.tags[0].name.fr : `${this.formEvent.tags.length} sélectionnés`;
         }
     }"
     @submit.prevent="mode === 'editEvent' ? updateEvent() : addEvent()"
@@ -32,7 +32,7 @@
         <div class="">
             <label for="name" class="block text-sm/6 font-medium">Nom</label>
             <div class="mt-2">
-                <input x-model="currentEvent.name" type="text" name="name" id="name"
+                <input x-model="formEvent.name" type="text" name="name" id="name"
                        class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 >
             </div>
@@ -47,7 +47,7 @@
 
             <div class="mt-2">
                 <!-- Listbox -->
-                <div x-listbox x-model="currentEvent.tags" multiple by="id"
+                <div x-listbox x-model="formEvent.tags" multiple by="id"
                      class="relative p-0 bg-transparent border-0"
                 >
                     <!-- Label -->
@@ -58,7 +58,7 @@
                             class="group flex w-full items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
                     >
                         <span x-text="label" class="truncate text-base text-gray-900 sm:text-sm/6"
-                              :class="{ '!text-gray-400': $listbox.value.length === 0 }"
+                              :class="{ '!text-gray-400': $listbox.value.length !== 1 }"
                         ></span>
 
                         <x-icons.chevron-down class="shrink-0 text-gray-300 group-hover:text-gray-800" size="size-5"/>
@@ -113,7 +113,7 @@
             <label for="description" class="block text-sm/6 font-medium">Description</label>
 
             <div class="mt-2">
-                <textarea x-model="currentEvent.description" id="description" name="description"
+                <textarea x-model="formEvent.description" id="description" name="description"
                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 ></textarea>
             </div>
@@ -128,7 +128,7 @@
             <label for="picker" class="text-sm font-medium select-none">Date</label>
 
             <div class="mt-2">
-                <input id="picker" x-ref="picker" x-model="currentEvent.date" name="date" type="text"
+                <input id="picker" x-ref="picker" x-model="formEvent.date" name="date" type="text"
                        placeholder="01/01/2001 16:20"
                        class="block w-full rounded-md bg-white px-3 py-1.5 mb-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 >

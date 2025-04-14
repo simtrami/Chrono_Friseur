@@ -1,10 +1,10 @@
 <div {{ $attributes->merge(['class' => 'flex flex-col my-2']) }}>
     <ul role="list" class="divide-y text-gray-800 divide-gray-300 -mb-4">
         <template x-for="tag of tags.get({fields: ['id', 'color', 'name']})" :key="tag.id">
-            <li class="w-full py-5 px-2 hover:bg-gray-50">
-                <x-tags.show x-show="mode === 'listTags' || currentTag?.id !== tag.id"/>
-                <x-tags.form x-show="mode === 'editTag' && currentTag?.id === tag.id"/>
-            </li>
+        <li class="w-full py-5 px-2 hover:bg-gray-50">
+            <x-tags.show x-show="mode === 'listTags' || formTag?.id !== tag.id"/>
+            <x-tags.form x-show="mode === 'editTag' && formTag?.id === tag.id"/>
+        </li>
         </template>
     </ul>
 
@@ -14,7 +14,7 @@
         </div>
         <div class="relative flex justify-center">
             <button @click="showAddTag()" type="button"
-                    class="inline-flex items-center gap-x-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+                    class="inline-flex items-center gap-x-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50 transition"
             >
                 <x-icons.plus class="-mr-0.5 -ml-1 text-gray-400" size="size-5"/>
 

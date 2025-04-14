@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTagRequest;
 use App\Http\Requests\UpdateTagRequest;
+use App\Models\Event;
 use Spatie\Tags\Tag;
 
 class TagController extends Controller
@@ -51,8 +52,17 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag)
     {
+        // Gather events which had this tag
+        $affected_events = Event::withAnyTags($tag)->get();
+
         $tag->delete();
 
-        return response()->json(['message' => 'Tag supprimé avec succès.']);
+        // Load tags after removal to get a fresh list
+        $affected_events->loadMissing('tags');
+
+        return response()->json([
+            'message' => 'Tag supprimé avec succès.',
+            'affected_events' => $affected_events,
+        ]);
     }
 }

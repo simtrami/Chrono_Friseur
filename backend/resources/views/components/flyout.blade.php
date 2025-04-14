@@ -22,7 +22,7 @@
                 <!-- Close Button -->
                 <div class="absolute right-0 top-0 mr-4 mt-4">
                     <button @click="$dialog.close()" type="button" id="close-flyout"
-                            class="relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-transparent p-1.5 font-medium text-gray-400 hover:bg-gray-800/10 hover:text-gray-800"
+                            class="relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-transparent p-1.5 font-medium text-gray-400 hover:bg-gray-800/10 hover:text-gray-800 transition"
                     >
                         <span class="sr-only">Fermer le panneau</span>
 
@@ -41,7 +41,7 @@
                         >Gestion des tags</span>
                     </h2>
 
-                    <template x-if="!currentEvent.id && (mode === 'showEvent' || mode === 'editEvent')">
+                    <template x-if="!selectedEvent.id && (mode === 'showEvent' || mode === 'editEvent')">
                     <!-- Loading event data -->
                     <div class="space-y-3 animate-pulse">
                         <div class="rounded-md bg-gray-200/70 h-5 w-[300px]"></div>
@@ -56,8 +56,8 @@
 
                     <!-- Actions for show -->
                     <div x-show="mode === 'showEvent'" class="mt-6 flex justify-end space-x-2">
-                        <button @click.prevent="mode = 'editEvent'" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
+                        <button @click.prevent="showEditEvent()" type="button"
+                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
                         >
                             <x-icons.pencil-square size="size-5"/>
 
@@ -65,7 +65,7 @@
                         </button>
 
                         <button @click.prevent="deleteEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-red-600 outline-0 outline-transparent hover:bg-red-500 focus:outline-2 focus:outline-offset-2 focus:outline-red-700"
+                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-red-600 outline-0 outline-transparent hover:bg-red-500 focus:outline-2 focus:outline-offset-2 focus:outline-red-700 transition"
                                 :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress, 'animate-wiggle': !preventEventDelete}"
                                 :disabled="eventRequestInProgress"
                         >
@@ -89,8 +89,8 @@
 
                     <!-- Actions for edit -->
                     <div x-show="mode === 'editEvent'" class="mt-6 flex justify-end space-x-2">
-                        <button @click.prevent="mode = 'showEvent'" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
+                        <button @click.prevent="cancelEditEvent()" type="button"
+                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
                         ><span>Annuler</span></button>
 
                         <button @click.prevent="updateEvent()" type="button"
@@ -113,11 +113,11 @@
                     <!-- Actions for add -->
                     <div x-show="mode === 'addEvent'" class="mt-6 flex justify-end space-x-2">
                         <button @click.prevent="$dialog.close()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10"
+                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
                         ><span>Annuler</span></button>
 
                         <button @click.prevent="addEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700"
+                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
                                 :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
                                 :disabled="eventRequestInProgress"
                         >
