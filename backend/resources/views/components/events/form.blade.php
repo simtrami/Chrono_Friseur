@@ -36,7 +36,7 @@
                        class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 >
             </div>
-            <template x-for="error in formErrors.name" :key="error">
+            <template x-for="error in eventFormErrors.name" :key="error">
             <x-form-error x-text="error"/>
             </template>
         </div>
@@ -103,7 +103,7 @@
                 </div>
             </div>
 
-            <template x-for="error in formErrors.tags" :key="error">
+            <template x-for="error in eventFormErrors.tags" :key="error">
             <x-form-error x-text="error"/>
             </template>
         </div>
@@ -118,7 +118,7 @@
                 ></textarea>
             </div>
 
-            <template x-for="error in formErrors.description" :key="error">
+            <template x-for="error in eventFormErrors.description" :key="error">
             <x-form-error x-text="error"/>
             </template>
         </div>
@@ -134,7 +134,7 @@
                 >
             </div>
 
-            <template x-for="error in formErrors.date" :key="error">
+            <template x-for="error in eventFormErrors.date" :key="error">
             <x-form-error x-text="error"/>
             </template>
         </div>

@@ -2,7 +2,7 @@
     <ul role="list" class="divide-y text-gray-800 divide-gray-300 -mb-4">
         <template x-for="tag of tags.get({fields: ['id', 'color', 'name']})" :key="tag.id">
             <li class="w-full py-5 px-2 hover:bg-gray-50">
-                <x-tags.tag x-show="mode === 'listTag' || currentTag?.id !== tag.id"/>
+                <x-tags.show x-show="mode === 'listTags' || currentTag?.id !== tag.id"/>
                 <x-tags.form x-show="mode === 'editTag' && currentTag?.id === tag.id"/>
             </li>
         </template>

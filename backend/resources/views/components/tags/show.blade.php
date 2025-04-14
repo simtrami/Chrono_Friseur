@@ -16,19 +16,19 @@
                 class="relative flex items-center justify-center whitespace-nowrap rounded-full p-1.5 text-red-500 text-sm outline-0 outline-transparent hover:text-white hover:bg-red-500 focus:outline-2 focus:outline-offset-2 focus:outline-red-600 transition"
                 :class="{
                     'opacity-50 cursor-not-allowed': tagRequestInProgress[tag.id],
-                     'animate-wiggle': !tagPreventDelete[tag.id]
+                     'animate-wiggle': !preventTagDelete[tag.id]
                  }"
 
         >
-            <template x-if="tagPreventDelete[tag.id] && !tagRequestInProgress[tag.id]">
+            <template x-if="preventTagDelete[tag.id] && !tagRequestInProgress[tag.id]">
             <x-icons.trash size="size-5"/>
             </template>
 
-            <template x-if="!tagRequestInProgress[tag.id] && !tagPreventDelete[tag.id]">
+            <template x-if="!tagRequestInProgress[tag.id] && !preventTagDelete[tag.id]">
             <x-icons.face-frown size="size-5"/>
             </template>
 
-            <span x-show="!tagRequestInProgress[tag.id] && !tagPreventDelete[tag.id]">?</span>
+            <span x-show="!tagRequestInProgress[tag.id] && !preventTagDelete[tag.id]">?</span>
 
             <template x-if="tagRequestInProgress[tag.id]">
             <x-icons.spinner size="size-5"/>

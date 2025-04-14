@@ -77,7 +77,7 @@
                 });
         },
         tagRequestInProgress: { 0: false },
-        tagPreventDelete: { 0: true },
+        preventTagDelete: { 0: true },
         getData() {
             // Get tags then get events
             this.tags.clear();
@@ -90,7 +90,7 @@
                             name: { fr: t.name.fr }
                         });
                         this.tagRequestInProgress[t.id] = false;
-                        this.tagPreventDelete[t.id] = true;
+                        this.preventTagDelete[t.id] = true;
                     })
                     this.getEvents();
                 }).catch(() => {
@@ -124,17 +124,17 @@
                 }
             }
         },
-        preventDelete: true,
-        requestInProgress: false,
+        preventEventDelete: true,
+        eventRequestInProgress: false,
         deleteEvent() {
-            if (this.preventDelete) {
-                this.preventDelete = false;
+            if (this.preventEventDelete) {
+                this.preventEventDelete = false;
                 setTimeout(() => {
-                    this.preventDelete = true;
+                    this.preventEventDelete = true;
                 }, 3000)
             } else {
-                this.preventDelete = true;
-                this.requestInProgress = true;
+                this.preventEventDelete = true;
+                this.eventRequestInProgress = true;
                 axios.delete('/events/' + this.currentEvent.id)
                     .then(() => {
                         this.events.remove(this.currentEvent.id);
@@ -147,13 +147,13 @@
                         } else {
                             this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' })
                         }
-                    }).finally(() => { this.requestInProgress = false; })
+                    }).finally(() => { this.eventRequestInProgress = false; })
             }
         },
-        formErrors: { name: [], description: [], date: [], tags: [] },
+        eventFormErrors: { name: [], description: [], date: [], tags: [] },
         updateEvent() {
-            this.requestInProgress = true;
-            this.formErrors = { name: [], description: [], date: [], tags: [] };
+            this.eventRequestInProgress = true;
+            this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
             axios.put('/events/' + this.currentEvent.id, this.currentEvent)
                 .then(response => {
                     this.events.updateOnly({
@@ -169,11 +169,11 @@
                     this.mode = 'showEvent';
                 }).catch(error => {
                     if (error.response.status === 422) {
-                        this.formErrors = error.response.data.errors
+                        this.eventFormErrors = error.response.data.errors
                     } else {
                         this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
                     }
-                }).finally(() => { this.requestInProgress = false; })
+                }).finally(() => { this.eventRequestInProgress = false; })
         },
         showAddForm(e) {
             // Remove focus on the button because the focus must not be hidden from assistive technology users.
@@ -186,11 +186,11 @@
             } else {
                 this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
             }
-            this.formErrors = { name: [], description: [], date: [], tags: [] };
+            this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
         },
         addEvent() {
-            this.requestInProgress = true;
-            this.formErrors = { name: [], description: [], date: [], tags: [] };
+            this.eventRequestInProgress = true;
+            this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
             axios.post('/events', {
                     name: this.currentEvent.name,
                     description: this.currentEvent.description,
@@ -210,27 +210,27 @@
                     this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] }
                 }).catch(error => {
                     if (error.response.status === 422) {
-                        this.formErrors = error.response.data.errors
+                        this.eventFormErrors = error.response.data.errors
                     } else {
                         this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' })
                     }
-                }).finally(() => { this.requestInProgress = false; })
+                }).finally(() => { this.eventRequestInProgress = false; })
         },
         openTagFlyout: false,
-        listTags(event) {
+        showListTags(event) {
             // Remove focus on the button because the focus must not be hidden from assistive technology users.
             document.activeElement.blur();
-            this.mode = 'listTag';
+            this.mode = 'listTags';
             this.openTagFlyout = true;
         },
         deleteTag(tag) {
-            if (this.tagPreventDelete[tag.id]) {
-                this.tagPreventDelete[tag.id] = false;
+            if (this.preventTagDelete[tag.id]) {
+                this.preventTagDelete[tag.id] = false;
                 setTimeout(() => {
-                    this.tagPreventDelete[tag.id] = true;
+                    this.preventTagDelete[tag.id] = true;
                 }, 3000);
             } else {
-                this.tagPreventDelete[tag.id] = true;
+                this.preventTagDelete[tag.id] = true;
                 this.tagRequestInProgress[tag.id] = true;
                 axios.delete('/tags/' + tag.id)
                     .then(() => {
@@ -243,7 +243,7 @@
                             this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' });
                         }
                     }).finally(() => {
-                        delete this.tagPreventDelete[tag.id];
+                        delete this.preventTagDelete[tag.id];
                         delete this.tagRequestInProgress[tag.id];
                     })
             }
@@ -274,7 +274,7 @@
                         color: response.data.color,
                         name: { fr: response.data.name.fr }
                     });
-                    this.mode = 'listTag';
+                    this.mode = 'listTags';
                 }).catch(error => {
                     if (error.response.status === 422) {
                         this.tagFormErrors = error.response.data.errors
@@ -294,8 +294,8 @@
                         name: { fr: response.data.name.fr }
                     });
                     this.tagRequestInProgress[response.data.id] = false;
-                    this.tagPreventDelete[response.data.id] = true;
-                    this.mode = 'listTag';
+                    this.preventTagDelete[response.data.id] = true;
+                    this.mode = 'listTags';
                 }).catch(error => {
                     if (error.response.status === 422) {
                         this.tagFormErrors = error.response.data.errors;
@@ -307,7 +307,7 @@
     }"
     @timeline-select.window="showEvent($event)"
     @add-event.window="showAddForm($event)"
-    @list-tags.window="listTags($event)"
+    @list-tags.window="showListTags($event)"
     class="w-full h-full flex items-center bg-white"
 >
     <!-- Loading overlay -->
