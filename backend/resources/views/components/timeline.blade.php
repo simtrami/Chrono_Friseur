@@ -1,8 +1,8 @@
 <div
     x-data="{
         loading: true,
-        events: [],
-        tags: {},
+        events: new DataSet(),
+        tags: new DataSet(),
         timeline: null,
         options: {
             start: '1020-01-01',
@@ -15,35 +15,34 @@
             xss: {
                 filterOptions: {
                     whiteList: {
-                        h1: ['class', 'title'],
+                        h1: ['class', 'x-tooltip'],
                         ul: ['class'],
-                        li: ['class', 'style', 'title'],
-                        span: ['class', 'style', 'title']
+                        template: ['x-for', ':key'],
+                        li: ['class', 'x-data'],
+                        span: ['class', ':style', 'x-tooltip']
                     }
                 }
             },
             template: function (item, element, data) {
-                let html = `<h1 title='${moment(item.start).format('llll')}'>${item.content}</h1>`;
+                let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('llll')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
-                        html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
-                    item.tags.forEach(tag => {
-                        html += `
-                            <li class='inline-flex size-2 h-2 w-2'>
-                                <span class='size-2 rounded-full shadow-sm hover:scale-150 transition'
-                                      style='background-color: ${tag.color}' title='${tag.name}'></span>
-                            </li>`;
-                    })
-                        html += '</ul>';
+                    html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
+                    html += `<template x-for='tag in events.get(${item.id}).tags' :key='tag.id'>`;
+                    html += `<li class='inline-flex size-2 h-2 w-2'>
+                                 <span x-tooltip='tags.get(tag.id).name.fr'
+                                       :style='\`background-color: \${tags.get(tag.id).color}\`'
+                                       class='size-2 rounded-full shadow-sm hover:scale-150 transition'
+                                 ></span>
+                             </li>`;
+                    html += '</template></ul>';
                 }
                 return html;
             }
         },
         init() {
             this.options.onInitialDrawComplete = () => { this.loading = false };
-            this.events = new DataSet();
             this.timeline = new Timeline(this.$refs.timeline, this.events, this.options);
-            this.getEvents();
-            this.getTags();
+            this.getData();
             this.timeline.on('select', function (selected) {
                 // If the selection is empty, we don't want to do anything.
                 if (selected.items.length > 0) {
@@ -66,13 +65,10 @@
                             id: e.id,
                             content: e.name,
                             start: e.date,
-                            tags: e.tags.map(t => {
-                                return {
-                                    id: t.id,
-                                    name: t.name.fr,
-                                    color: t.color
-                                }
-                            })
+                            name: e.name,
+                            description: e.description,
+                            date: e.date,
+                            tags: e.tags.map(t => this.tags.get(t.id))
                         });
                     });
                     this.timeline.fit();
@@ -80,16 +76,23 @@
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
                 });
         },
-        tagRequestInProgress: [false],
-        tagPreventDelete: [true],
-        getTags() {
+        tagRequestInProgress: { 0: false },
+        tagPreventDelete: { 0: true },
+        getData() {
+            // Get tags then get events
+            this.tags.clear();
             axios.get('/tags')
                 .then(response => {
                     response.data.forEach(t => {
-                        this.tags[t.id] = t;
+                        this.tags.add({
+                            id: t.id,
+                            color: t.color,
+                            name: { fr: t.name.fr }
+                        });
                         this.tagRequestInProgress[t.id] = false;
                         this.tagPreventDelete[t.id] = true;
                     })
+                    this.getEvents();
                 }).catch(() => {
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les tags.'});
                 });
@@ -107,13 +110,18 @@
             this.mode = 'showEvent';
             this.openEventFlyout = true;
             if (this.currentEvent.id !== event.detail) {
-                this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
-                axios.get('/events/' + event.detail)
-                    .then(response => {
-                        this.currentEvent = response.data;
-                    }).catch(() => {
-                        this.$dispatch('notify', {type: 'error', content: `Impossible de charger l'événements.`});
-                    })
+                var e = this.events.get(event.detail);
+                this.currentEvent = {
+                    id: e.id,
+                    name: e.name,
+                    description: e.description,
+                    date: e.date,
+                    tags: e.tags
+                };
+                console.log(this.currentEvent)
+                for (t in this.currentEvent.tags) {
+                    console.log(t)
+                }
             }
         },
         preventDelete: true,
@@ -130,8 +138,8 @@
                 axios.delete('/events/' + this.currentEvent.id)
                     .then(() => {
                         this.events.remove(this.currentEvent.id);
-                        this.openEventFlyout = false;
                         this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] };
+                        this.openEventFlyout = false;
                         this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
                     }).catch(error => {
                         if (error.status === 404) {
@@ -148,19 +156,16 @@
             this.formErrors = { name: [], description: [], date: [], tags: [] };
             axios.put('/events/' + this.currentEvent.id, this.currentEvent)
                 .then(response => {
-                    this.events.update([{
+                    this.events.updateOnly({
                         id: response.data.id,
                         content: response.data.name,
                         start: response.data.date,
-                        tags: response.data.tags.map(t => {
-                            return {
-                                id: t.id,
-                                name: t.name.fr,
-                                color: t.color
-                            }
-                        })
-                    }]);
-                    this.currentEvent = response.data;
+                        name: response.data.name,
+                        description: response.data.description,
+                        date: response.data.date,
+                        tags: response.data.tags.map(t => this.tags.get(t.id))
+                    });
+                    this.currentEvent = this.events.get(response.data.id);
                     this.mode = 'showEvent';
                 }).catch(error => {
                     if (error.response.status === 422) {
@@ -195,7 +200,11 @@
                     this.events.add({
                         id: response.data.id,
                         content: response.data.name,
-                        start: response.data.date
+                        start: response.data.date,
+                        name: response.data.name,
+                        description: response.data.description,
+                        date: response.data.date,
+                        tags: response.data.tags.map(t => this.tags.get(t.id))
                     });
                     this.openEventFlyout = false;
                     this.currentEvent = { id: null, name: null, description: null, date: null, tags: [] }
@@ -219,30 +228,24 @@
                 this.tagPreventDelete[tag.id] = false;
                 setTimeout(() => {
                     this.tagPreventDelete[tag.id] = true;
-                }, 3000)
+                }, 3000);
             } else {
                 this.tagPreventDelete[tag.id] = true;
                 this.tagRequestInProgress[tag.id] = true;
                 axios.delete('/tags/' + tag.id)
                     .then(() => {
-                        delete this.tags[tag.id];
-                        // Update tags in currentEvent if it has one or more
-                        if (this.currentEvent.tags.length > 0) {
-                            axios.get('/events/' + this.currentEvent.id)
-                                .then(response => {
-                                    this.currentEvent = response.data;
-                                }).catch(() => {
-                                    this.$dispatch('notify', { content: `Impossible de charger l'événements.`, type: 'error' });
-                                })
-                        }
-                        this.$dispatch('notify', { content: `Le tag a bien été supprimé.`, type: 'success' })
+                        this.tags.remove(tag.id);
+                        this.$dispatch('notify', { content: `Le tag a bien été supprimé.`, type: 'success' });
                     }).catch(error => {
                         if (error.status === 404) {
-                            this.$dispatch('notify', { content: `Le tag n'existe pas.`, type: 'error' })
+                            this.$dispatch('notify', { content: `Le tag n'existe pas.`, type: 'error' });
                         } else {
-                            this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' })
+                            this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' });
                         }
-                    }).finally(() => { this.tagRequestInProgress[tag.id] = false; })
+                    }).finally(() => {
+                        delete this.tagPreventDelete[tag.id];
+                        delete this.tagRequestInProgress[tag.id];
+                    })
             }
         },
         currentTag: {
@@ -261,46 +264,45 @@
             this.tagFormErrors = { name: [], color: [] };
         },
         tagFormErrors: { name: [], color: [] },
-        updateTag(tag) {
-            this.tagRequestInProgress[tag.id] = true;
+        updateTag() {
+            this.tagRequestInProgress[this.currentTag.id] = true;
             this.tagFormErrors = { name: [], color: [] };
-            axios.put('/tags/' + tag.id, tag)
+            axios.put('/tags/' + this.currentTag.id, this.currentTag)
                 .then(response => {
-                    this.tags[tag.id] = response.data;
+                    this.tags.updateOnly({
+                        id: response.data.id,
+                        color: response.data.color,
+                        name: { fr: response.data.name.fr }
+                    });
                     this.mode = 'listTag';
-                    // Update tags in currentEvent if it has one or more
-                    if (this.currentEvent.tags.length > 0) {
-                        axios.get('/events/' + this.currentEvent.id)
-                            .then(response => {
-                                this.currentEvent = response.data;
-                            }).catch(() => {
-                                this.$dispatch('notify', { content: `Impossible de charger l'événements.`, type: 'error' });
-                            })
-                    }
                 }).catch(error => {
                     if (error.response.status === 422) {
                         this.tagFormErrors = error.response.data.errors
                     } else {
                         this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
                     }
-                }).finally(() => { this.tagRequestInProgress[tag.id] = false; })
+                }).finally(() => { this.tagRequestInProgress[this.currentTag.id] = false; })
         },
-        addTag(tag) {
-            this.tagRequestInProgress[tag.id] = true;
+        addTag() {
+            this.tagRequestInProgress[this.currentTag.id] = true;
             this.tagFormErrors = { name: [], color: [] };
-            axios.post('/tags', tag)
+            axios.post('/tags', this.currentTag)
                 .then(response => {
-                    this.tags[response.data.id] = response.data;
-                    this.tagPreventDelete[response.data.id] = true;
+                    this.tags.add({
+                        id: response.data.id,
+                        color: response.data.color,
+                        name: { fr: response.data.name.fr }
+                    });
                     this.tagRequestInProgress[response.data.id] = false;
+                    this.tagPreventDelete[response.data.id] = true;
                     this.mode = 'listTag';
                 }).catch(error => {
                     if (error.response.status === 422) {
-                        this.tagFormErrors = error.response.data.errors
+                        this.tagFormErrors = error.response.data.errors;
                     } else {
-                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' })
+                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' });
                     }
-                }).finally(() => { this.tagRequestInProgress[tag.id] = false; })
+                }).finally(() => { this.tagRequestInProgress[this.currentTag.id] = false; })
         }
     }"
     @timeline-select.window="showEvent($event)"

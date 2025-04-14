@@ -4,8 +4,8 @@
     <template x-if="currentEvent.tags.length > 0">
     <div class="space-x-1">
         <template x-for="tag in currentEvent.tags" :key="tag.id">
-        <x-tags.badge>
-            <span x-text="tag.name?.fr"></span>
+        <x-tags.badge x-bind:style="`fill: ${tags.get(tag.id).color ?? 'black'}`">
+            <span x-text="tags.get(tag.id).name.fr"></span>
         </x-tags.badge>
         </template>
     </div>

@@ -78,7 +78,7 @@
                         </li>
                         </template>
 
-                        <template x-for="tag in tags" :key="tag.id">
+                        <template x-for="tag of tags.get({fields: ['id', 'color', 'name']})" :key="tag.id">
                         <!-- Option -->
                         <li x-listbox:option :value="tag" :disabled="false"
                             class="group flex w-full cursor-default items-center rounded-md px-2 py-1.5 transition-colors"

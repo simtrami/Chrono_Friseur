@@ -3,9 +3,9 @@
     x-data="{
         submit() {
             if (mode === 'editTag') {
-                updateTag(currentTag);
+                updateTag();
             } else if (mode === 'addTag') {
-                addTag(currentTag);
+                addTag();
             }
         }
     }"
