@@ -25,4 +25,15 @@ class SearchEventRequest extends FormRequest
             'before' => 'sometimes|nullable|date|date_format:Y-m-d H:i|after_or_equal:after',
         ];
     }
+
+    public function attributes(): array
+    {
+        return [
+            'fulltext' => 'texte',
+            'with_tags' => 'avec',
+            'without_tags' => 'sans',
+            'after' => 'après',
+            'before' => 'avant',
+        ];
+    }
 }

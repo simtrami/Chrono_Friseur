@@ -24,7 +24,7 @@ class UpdateEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|min:2|max:30',
             'description' => 'nullable|string|max:2000',
             'date' => [
                 'required',
@@ -32,6 +32,13 @@ class UpdateEventRequest extends FormRequest
             ],
             'tags' => 'nullable|array',
             'tags.*.id' => 'distinct|exists:tags',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name' => 'nom',
         ];
     }
 }
