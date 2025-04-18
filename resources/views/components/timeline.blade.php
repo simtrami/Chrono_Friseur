@@ -24,7 +24,7 @@
                 }
             },
             template: function (item, element, data) {
-                let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('llll')}'&quot;>${item.content}</h1>`;
+                let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('LL')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
                     html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
                     html += `<template x-for='tag in events.get(${item.id})?.tags' :key='tag?.id'>`;
@@ -285,7 +285,7 @@
         },
         tagFormErrors: { name: [], color: [] },
         showAddTag() {
-            this.mode = 'addTag';
+            this.mode = 'addtagrequTag';
             this.formTag = { id: 0, name: { fr: '' }, color: '#000000' };
             this.tagFormErrors = { name: [], color: [] };
         },
@@ -442,17 +442,30 @@
         <x-search/>
     </x-flyout>
 
+    <!-- Top right elements -->
+    <div class="fixed flex space-x-4 top-0 right-0 pr-8 pt-8 z-10 md:pr-12 md:pt-12">
+        <!-- Reset view button -->
+        <button x-tooltip="'Ajuster la vue'"
+                @click="timeline.fit();" type="button"
+                class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+        >
+            <x-icons.back size="size-5"/>
+        </button>
+
+    </div>
+
+    <!-- Bottom right elements -->
     <div class="fixed flex space-x-4 bottom-0 right-0 pr-8 pb-8 z-10 md:pr-12 md:pb-12">
         <!-- Open search button -->
-        <button x-tooltip="'Rechercher'"
+        <button x-tooltip="'Filtrer les événements'"
                 @click="$dispatch('open-search')" type="button"
                 class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
         >
-            <x-icons.search size="size-6"/>
+            <x-icons.solid-funnel size="size-6"/>
         </button>
 
         <!-- List tags button -->
-        <button x-tooltip="'Gestion des tags'"
+        <button x-tooltip="'Gérer les tags'"
                 @click="$dispatch('list-tags')" type="button"
                 class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
         >

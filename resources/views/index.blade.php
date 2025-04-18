@@ -1,6 +1,4 @@
-@use('Illuminate\Support\Facades\Vite')
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <title>Frise Chronologique Interactive</title>

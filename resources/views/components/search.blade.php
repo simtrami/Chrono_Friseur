@@ -97,7 +97,7 @@
                                           class="shrink-0 text-gray-300 group-hover:text-gray-800 transition-transform"
                     />
 
-                    <span class="flex-1">Text</span>
+                    <span class="flex-1">Texte</span>
                 </button>
 
                 <div x-disclosure:panel x-collapse class="space-y-3">
@@ -335,7 +335,7 @@
             <button x-tooltip="'Réinitialiser'" @click.prevent="resetSearch()" type="button"
                     class="relative flex items-center justify-center whitespace-nowrap h-min rounded-full p-1.5 text-gray-500 text-sm outline-0 outline-transparent  hover:text-gray-800 hover:bg-gray-800/10 focus:outline-2 focus:outline-gray-600 transition"
             >
-                <x-icons.arrow-path size="size-5"/>
+                <x-icons.back size="size-5"/>
             </button>
 
             <div class="flex justify-end space-x-2">
@@ -349,7 +349,7 @@
                         :disabled="eventRequestInProgress"
                 >
                     <template x-if="!eventRequestInProgress">
-                    <x-icons.search size="size-5"/>
+                    <x-icons.solid-funnel size="size-5"/>
                     </template>
 
                     <template x-if="eventRequestInProgress">
