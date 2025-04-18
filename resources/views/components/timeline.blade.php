@@ -91,17 +91,22 @@
                     this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les tags.'});
                 });
         },
-        getEvents() {
-            axios.get('/events')
+        getEvents(filters = null) {
+            axios.get('/events', { params: filters })
                 .then(response => {
+                    this.$dispatch('events-loaded');
                     this.events.clear();
                     response.data.forEach(e => {
                         this.events.add(this.makeEventData(e));
                     });
                     this.timeline.fit();
-                }).catch(() => {
-                    this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
-                });
+                }).catch(error => {
+                    if (error.status === 422) {
+                        this.$dispatch('events-errored', {errors: error.response.data.errors})
+                    } else {
+                        this.$dispatch('notify', {type: 'error', content: 'Impossible de charger les événements.'});
+                    }
+                }).finally(() => { this.eventRequestInProgress = false; });
         },
         openEventFlyout: false,
         selectedEvent: {

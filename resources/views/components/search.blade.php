@@ -30,11 +30,13 @@
                 before: []
             }
         },
-        searchRequestInProgress: false,
         applyFilters() {
-            console.log(this.formSearch);
-        },
-    }"
+            this.eventRequestInProgress = true;
+            this.getEvents(this.formSearch); // If form errors, dispatches 'events-errored' event with errors.
+        }
+     }"
+     @events-loaded="openSearchFlyout = false;"
+     @events-errored="searchFormErrors = $event.detail.errors"
 >
     <form
         x-data="{
@@ -82,7 +84,7 @@
             }
         }"
         :id="mode + '-event-form'"
-        @submit.prevent=""
+        @submit.prevent="applyFilters()"
     >
         <div class="flex flex-col my-2 space-y-3 max-w-2xl text-gray-500 border-b border-gray-900/10 mb-4 pb-6">
             <div x-disclosure default-open
@@ -131,7 +133,7 @@
                 <div x-disclosure:panel x-collapse class="space-y-3">
                     <!-- Must have tags -->
                     <div>
-                        <label for="with_tags" class="text-sm font-medium select-none">A les tags&mldr;</label>
+                        <label for="with_tags" class="text-sm font-medium select-none">A un des tags&mldr;</label>
 
                         <div class="mt-2">
                             <!-- Listbox -->
@@ -139,7 +141,7 @@
                                  class="relative p-0 bg-transparent border-0"
                             >
                                 <!-- Label -->
-                                <label x-listbox:label class="sr-only">A les tags&mldr;</label>
+                                <label x-listbox:label class="sr-only">A un des tags&mldr;</label>
 
                                 <!-- Button -->
                                 <button x-listbox:button
@@ -343,14 +345,14 @@
 
                 <button @click.prevent="applyFilters()" type="submit"
                         class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-                        :class="{'opacity-50 cursor-not-allowed': searchRequestInProgress}"
-                        :disabled="searchRequestInProgress"
+                        :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
+                        :disabled="eventRequestInProgress"
                 >
-                    <template x-if="!searchRequestInProgress">
+                    <template x-if="!eventRequestInProgress">
                     <x-icons.search size="size-5"/>
                     </template>
 
-                    <template x-if="searchRequestInProgress">
+                    <template x-if="eventRequestInProgress">
                     <x-icons.spinner size="size-5"/>
                     </template>
 
