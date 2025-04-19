@@ -27,7 +27,7 @@
     }"
     @submit.prevent="mode === 'editEvent' ? updateEvent() : addEvent()"
 >
-    <div class="flex flex-col my-2 space-y-2 max-w-2xl text-gray-500 border-b border-gray-900/10 pb-6">
+    <div class="flex flex-col my-2 space-y-3 max-w-2xl text-gray-500 border-b border-gray-900/10 pb-6">
         <!-- Name -->
         <div class="">
             <label for="name" class="block text-sm/6 font-medium">Nom</label>

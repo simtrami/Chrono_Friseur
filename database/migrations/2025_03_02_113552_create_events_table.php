@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('name');
             $table->dateTime('date');
             $table->text('description')->nullable();
+
+            // Adds a FULLTEXT index to facilitate full-text search on these columns.
+            $table->fullText(['name', 'description']);
         });
     }
 

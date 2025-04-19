@@ -39,6 +39,7 @@
                         <span x-show="mode === 'addEvent'">Ajouter un événement</span>
                         <span x-show="mode === 'listTags' || mode === 'editTag' || mode === 'addTag'"
                         >Gestion des tags</span>
+                        <span x-show="mode === 'search'">Rechercher & Filtrer par&mldr;</span>
                     </h2>
 
                     <template x-if="!selectedEvent.id && (mode === 'showEvent' || mode === 'editEvent')">
@@ -53,85 +54,6 @@
 
                     <!-- Content -->
                     {{ $slot }}
-
-                    <!-- Actions for show -->
-                    <div x-show="mode === 'showEvent'" class="mt-6 flex justify-end space-x-2">
-                        <button @click.prevent="showEditEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
-                        >
-                            <x-icons.pencil-square size="size-5"/>
-
-                            <span>Modifier</span>
-                        </button>
-
-                        <button @click.prevent="deleteEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-red-600 outline-0 outline-transparent hover:bg-red-500 focus:outline-2 focus:outline-offset-2 focus:outline-red-700 transition"
-                                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress, 'animate-wiggle': !preventEventDelete}"
-                                :disabled="eventRequestInProgress"
-                        >
-                            <template x-if="preventEventDelete && !eventRequestInProgress">
-                            <x-icons.trash size="size-5"/>
-                            </template>
-
-                            <template x-if="eventRequestInProgress">
-                            <x-icons.spinner size="size-5"/>
-                            </template>
-
-                            <template x-if="!eventRequestInProgress && !preventEventDelete">
-                            <x-icons.face-frown size="size-5"/>
-                            </template>
-
-                            <span x-show="!eventRequestInProgress"
-                                  x-text="preventEventDelete ? 'Supprimer' : 'Vraiment ?'"
-                            ></span>
-                        </button>
-                    </div>
-
-                    <!-- Actions for edit -->
-                    <div x-show="mode === 'editEvent'" class="mt-6 flex justify-end space-x-2">
-                        <button @click.prevent="cancelEditEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
-                        ><span>Annuler</span></button>
-
-                        <button @click.prevent="updateEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-                                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
-                                :disabled="eventRequestInProgress"
-                        >
-                            <template x-if="!eventRequestInProgress">
-                            <x-icons.pencil-square size="size-5"/>
-                            </template>
-
-                            <template x-if="eventRequestInProgress">
-                            <x-icons.spinner size="size-5"/>
-                            </template>
-
-                            <span>Appliquer</span>
-                        </button>
-                    </div>
-
-                    <!-- Actions for add -->
-                    <div x-show="mode === 'addEvent'" class="mt-6 flex justify-end space-x-2">
-                        <button @click.prevent="$dialog.close()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
-                        ><span>Annuler</span></button>
-
-                        <button @click.prevent="addEvent()" type="button"
-                                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-                                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
-                                :disabled="eventRequestInProgress"
-                        >
-                            <template x-if="!eventRequestInProgress">
-                            <x-icons.plus size="size-5"/>
-                            </template>
-
-                            <template x-if="eventRequestInProgress">
-                            <x-icons.spinner size="size-5"/>
-                            </template>
-
-                            <span>Ajouter</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
