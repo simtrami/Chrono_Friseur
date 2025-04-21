@@ -54,6 +54,26 @@ class EventService
     }
 
     /**
+     * Update an existing event with optional tags
+     *
+     * @param  Event  $event  The event to update
+     * @param  array  $attributes  Event attributes including optional tags
+     * @return Event The updated event
+     */
+    public function updateEvent(Event $event, array $attributes): Event
+    {
+        // Update the event with basic attributes
+        $event->update($attributes);
+
+        // Sync tags if present
+        if (! empty($attributes['tags'])) {
+            $this->syncEventTags($event, $attributes['tags']);
+        }
+
+        return $event;
+    }
+
+    /**
      * Sync tags to an event
      *
      * @param  Event  $event  The event to sync tags to

@@ -43,14 +43,12 @@ class EventController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEventRequest $request, Event $event)
+    public function update(UpdateEventRequest $request, EventService $eventService, Event $event)
     {
         $attributes = $request->validated();
-        $event->tags()->sync(array_column($attributes['tags'], 'id'));
-        $event->update($attributes);
-        $event->loadMissing('tags:id,name,color');
 
-        return $event;
+        return $eventService->updateEvent($event, $attributes)
+            ->loadMissing('tags:id,name,color');
     }
 
     /**
