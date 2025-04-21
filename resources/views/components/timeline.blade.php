@@ -23,7 +23,7 @@
                     }
                 }
             },
-            template: function (item, element, data) {
+            template: function (item) {
                 let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('LL')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
                     html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
@@ -165,7 +165,7 @@
         preventEventDelete: true,
         eventRequestInProgress: false,
         deleteEvent() {
-            // Must execute this action twice in 3s to effectively delete.
+            // Must execute this action twice in 3 seconds to effectively delete.
             if (this.preventEventDelete) {
                 this.preventEventDelete = false;
                 setTimeout(() => {
@@ -236,14 +236,14 @@
                 }).finally(() => { this.eventRequestInProgress = false; })
         },
         openTagFlyout: false,
-        showListTags(event) {
+        showListTags() {
             // Remove focus on the button because the focus must not be hidden from assistive technology users.
             document.activeElement.blur();
             this.mode = 'listTags';
             this.openTagFlyout = true;
         },
         deleteTag(tag) {
-            // Must execute this action twice in 3s to effectively delete.
+            // Must execute this action twice in 3 seconds to effectively delete.
             if (this.preventTagDelete[tag.id]) {
                 this.preventTagDelete[tag.id] = false;
                 setTimeout(() => {
@@ -327,17 +327,17 @@
                 }).finally(() => { this.tagRequestInProgress[this.formTag.id] = false; })
         },
         openSearchFlyout: false,
-        showSearch(event) {
+        showSearch() {
             // Remove focus on the button because the focus must not be hidden from assistive technology users.
             document.activeElement.blur();
             this.openSearchFlyout = true;
             this.mode = 'search';
-        },
+        }
     }"
     @timeline-select.window="showEvent($event)"
     @add-event.window="showAddForm($event)"
-    @list-tags.window="showListTags($event)"
-    @open-search.window="showSearch($event)"
+    @list-tags.window="showListTags()"
+    @open-search.window="showSearch()"
     class="w-full h-full flex items-center bg-white"
 >
     <!-- Loading overlay -->

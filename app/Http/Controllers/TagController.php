@@ -17,13 +17,13 @@ class TagController extends Controller
     {
         $tagsQuery = $tagService->filterTags([]);
 
-        return $tagsQuery->ordered()->get();
+        return $tagsQuery->orderBy('id')->get();
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTagRequest $request, TagService $tagService)
+    public function store(StoreTagRequest $request, TagService $tagService): Tag
     {
         $attributes = $request->validated();
 
@@ -33,7 +33,7 @@ class TagController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Tag $tag)
+    public function show(Tag $tag): Tag
     {
         return $tag;
     }
@@ -41,7 +41,7 @@ class TagController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTagRequest $request, TagService $tagService, Tag $tag)
+    public function update(UpdateTagRequest $request, TagService $tagService, Tag $tag): Tag
     {
         $attributes = $request->validated();
 

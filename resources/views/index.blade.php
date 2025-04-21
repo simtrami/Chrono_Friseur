@@ -35,8 +35,9 @@
         })
 
         // Directive: x-tooltip
+        // noinspection GrazieInspection
         Alpine.directive('tooltip', (el, {expression}, {evaluateLater, effect}) => {
-            // Function to evaluate expression reactively, ie. the message will change when the evaluated value changes
+            // Function to evaluate expression reactively, the message will change when the evaluated value changes
             // See: https://alpinejs.dev/advanced/extending#introducing-reactivity
             let showTooltip = evaluateLater(expression);
             effect(() => {

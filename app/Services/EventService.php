@@ -10,7 +10,7 @@ class EventService
     /**
      * Filter events based on search criteria
      */
-    public function filterEvents(array $filters): \Illuminate\Database\Eloquent\Builder
+    public function filterEvents(array $filters): Builder
     {
         return Event::query()
             ->when(isset($filters['fulltext']), function ($query) use ($filters) {
@@ -99,6 +99,6 @@ class EventService
      */
     private function extractTagIds(array $tags): array
     {
-        return array_map(fn ($tag) => $tag['id'], $tags);
+        return array_map(static fn ($tag) => $tag['id'], $tags);
     }
 }
