@@ -30,7 +30,7 @@
                 <!-- Body -->
                 <div class="space-y-6">
                     <!-- Title -->
-                    <h2 x-dialog:title class="font-medium text-gray-800 text-xl">{{ $title }}</h2>
+                    <h2 x-dialog:title class="font-medium text-gray-800 text-xl">{{ $title ?? '' }}</h2>
 
                     <!-- Content -->
                     {{ $slot }}
