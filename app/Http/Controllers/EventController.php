@@ -6,50 +6,19 @@ use App\Http\Requests\SearchEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\EventService;
 
 class EventController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(SearchEventRequest $request)
+    public function index(SearchEventRequest $request, EventService $eventService)
     {
         $filters = $request->validated();
-        $eventsQuery = Event::query();
+        $eventsQuery = $eventService->filterEvents($filters);
 
-        if (isset($filters['fulltext'])) {
-            $eventsQuery = $eventsQuery->whereFullText(
-                ['name', 'description'],
-                $filters['fulltext']
-            );
-        }
-        if (! empty($filters['with_tags'])) {
-            $eventsQuery = $eventsQuery
-                ->whereHas('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id',
-                        array_map(fn ($tag) => $tag['id'], $filters['with_tags'])
-                    );
-                });
-        }
-        if (! empty($filters['without_tags'])) {
-            $eventsQuery = $eventsQuery
-                ->whereDoesntHave('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id',
-                        array_map(fn ($tag) => $tag['id'], $filters['without_tags'])
-                    );
-                });
-        }
-        if (isset($filters['after'])) {
-            $eventsQuery = $eventsQuery
-                ->where('date', '>', $filters['after']);
-        }
-        if (isset($filters['before'])) {
-            $eventsQuery = $eventsQuery
-                ->where('date', '<', $filters['before']);
-        }
-
-        return $eventsQuery->with('tags')->get();
+        return $eventsQuery->with('tags:id,name,color')->get();
     }
 
     /**
