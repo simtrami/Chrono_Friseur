@@ -7,6 +7,7 @@ use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
 use App\Services\EventService;
+use Illuminate\Http\JsonResponse;
 
 class EventController extends Controller
 {
@@ -54,9 +55,9 @@ class EventController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Event $event)
+    public function destroy(Event $event, EventService $eventService): JsonResponse
     {
-        $event->delete();
+        $eventService->deleteEvent($event);
 
         return response()->json(['message' => 'Événement supprimé avec succès.']);
     }

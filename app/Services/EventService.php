@@ -74,6 +74,16 @@ class EventService
     }
 
     /**
+     * Delete an event
+     *
+     * @param  Event  $event  The event to delete
+     */
+    public function deleteEvent(Event $event): void
+    {
+        $event->delete();
+    }
+
+    /**
      * Sync tags to an event
      *
      * @param  Event  $event  The event to sync tags to
