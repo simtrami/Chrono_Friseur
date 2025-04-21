@@ -43,7 +43,13 @@
             let showTooltip = evaluateLater(expression);
             effect(() => {
                 showTooltip(message => {
-                    window.tippy(el, {content: message, theme: 'light', arrow: false, animation: 'scale-subtle'})
+                    window.tippy(el, {
+                        content: message,
+                        theme: 'light',
+                        arrow: false,
+                        animation: 'scale-subtle',
+                        touch: 'hold'
+                    })
                 })
             });
         })
