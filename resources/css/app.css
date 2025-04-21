@@ -51,10 +51,17 @@ comme ça il est pas trop gros.
         color:            var(--color-gray-900) !important;
     }
 
-    .vis-item.vis-selected {
-        border-color:     var(--color-indigo-500) !important;
-        background-color: var(--color-indigo-500) !important;
-        color:            var(--color-white) !important;
+    .vis-item:hover:not(.vis-dot):not(.vis-line) {
+        border-color:     var(--color-slate-100) !important;
+        background-color: var(--color-slate-100) !important;
+    }
+
+    .vis-item.vis-selected:not(.vis-dot):not(.vis-line), .vis-item.vis-selected:not(.vis-dot):not(.vis-line):focus {
+        outline:          var(--color-indigo-500) 2px solid !important;
+        outline-offset:   calc(1px * -1);
+        border-color:     var(--color-slate-100) !important;
+        background-color: var(--color-slate-100) !important;
+        color:            var(--color-gray-900) !important;
     }
 
     .vis-item-content {
