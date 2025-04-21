@@ -285,7 +285,7 @@
         },
         tagFormErrors: { name: [], color: [] },
         showAddTag() {
-            this.mode = 'addtagrequTag';
+            this.mode = 'addTag';
             this.formTag = { id: 0, name: { fr: '' }, color: '#000000' };
             this.tagFormErrors = { name: [], color: [] };
         },
