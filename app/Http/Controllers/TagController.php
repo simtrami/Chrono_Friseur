@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTagRequest;
 use App\Http\Requests\UpdateTagRequest;
 use App\Models\Event;
+use App\Services\TagService;
 use Spatie\Tags\Tag;
 
 class TagController extends Controller
@@ -12,9 +13,11 @@ class TagController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(TagService $tagService)
     {
-        return Tag::whereType(null)->ordered()->get();
+        $tagsQuery = $tagService->filterTags([]);
+
+        return $tagsQuery->ordered()->get();
     }
 
     /**
