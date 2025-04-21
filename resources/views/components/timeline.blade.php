@@ -23,7 +23,7 @@
                     }
                 }
             },
-            template: function (item, element, data) {
+            template: function (item) {
                 let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('LL')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
                     html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
@@ -285,7 +285,7 @@
         },
         tagFormErrors: { name: [], color: [] },
         showAddTag() {
-            this.mode = 'addTag';
+            this.mode = 'addtagrequTag';
             this.formTag = { id: 0, name: { fr: '' }, color: '#000000' };
             this.tagFormErrors = { name: [], color: [] };
         },

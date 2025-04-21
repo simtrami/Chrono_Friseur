@@ -4,65 +4,72 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTagRequest;
 use App\Http\Requests\UpdateTagRequest;
-use App\Models\Event;
+use App\Services\TagService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Spatie\Tags\Tag;
 
 class TagController extends Controller
 {
+    private TagService $tagService;
+
     /**
-     * Display a listing of the resource.
+     * Constructor with dependency injection
+     */
+    public function __construct(TagService $tagService)
+    {
+        $this->tagService = $tagService;
+    }
+
+    /**
+     * Display a listing of tags.
+     *
+     * @return Collection
      */
     public function index()
     {
-        return Tag::whereType(null)->ordered()->get();
+        return $this->tagService->filterTags([])
+            ->orderBy('id')->get();
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created tag in storage.
      */
-    public function store(StoreTagRequest $request)
+    public function store(StoreTagRequest $request): Tag
     {
         $attributes = $request->validated();
 
-        return Tag::create($attributes);
+        return $this->tagService->createTag($attributes);
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified tag.
      */
-    public function show(Tag $tag)
+    public function show(Tag $tag): Tag
     {
         return $tag;
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified tag in storage.
      */
-    public function update(UpdateTagRequest $request, Tag $tag)
+    public function update(UpdateTagRequest $request, Tag $tag): Tag
     {
         $attributes = $request->validated();
-        $tag->update($attributes);
-        $tag->refresh();
 
-        return $tag;
+        return $this->tagService->updateTag($tag, $attributes);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified tag from storage.
      */
-    public function destroy(Tag $tag)
+    public function destroy(Tag $tag): JsonResponse
     {
-        // Gather events which had this tag
-        $affected_events = Event::withAnyTags($tag)->get();
-
-        $tag->delete();
-
-        // Load tags after removal to get a fresh list
-        $affected_events->loadMissing('tags');
+        $affectedEvents = $this->tagService->deleteTag($tag);
 
         return response()->json([
-            'message' => 'Tag supprimé avec succès.',
-            'affected_events' => $affected_events,
+            'message' => 'Le tag a bien été supprimé.',
+            'affected_events' => $affectedEvents,
         ]);
     }
 }
