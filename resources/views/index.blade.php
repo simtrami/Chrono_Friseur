@@ -9,7 +9,7 @@
     @vite('resources/js/app.js')
 </head>
 
-<body class="m-0 p-3 flex justify-center items-center h-screen bg-gray-100 font-sans">
+<body class="font-sans flex justify-center items-center h-dvh m-0 p-2 pb-14 bg-slate-100 md:pb-16">
 
 <!-- Notification -->
 <x-notification/>

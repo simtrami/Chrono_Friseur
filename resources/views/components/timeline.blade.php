@@ -11,6 +11,8 @@
             margin: {
                 item: 20
             },
+            height: '100%',
+            orientation: 'top',
             locale: 'fr',
             xss: {
                 filterOptions: {
@@ -26,9 +28,9 @@
             template: function (item) {
                 let html = `<h1 x-tooltip=&quot;'${moment(item.start).format('LL')}'&quot;>${item.content}</h1>`;
                 if (item.tags.length > 0) {
-                    html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start size-2 h-2 w-2 font-extrabold'>`;
+                    html += `<ul class='absolute -top-1 left-0.5 flex space-x-1 items-start h-2 font-extrabold'>`;
                     html += `<template x-for='tag in events.get(${item.id})?.tags' :key='tag?.id'>`;
-                    html += `<li class='inline-flex size-2 h-2 w-2'>
+                    html += `<li class='inline-flex size-2'>
                                  <span x-tooltip='tags.get(tag.id)?.name.fr'
                                        :style='\`background-color: \${tags.get(tag.id)?.color}\`'
                                        class='size-2 rounded-full shadow-sm hover:scale-150 transition'
@@ -166,12 +168,12 @@
     @add-event.window="showAddForm($event)"
     @list-tags.window="showListTags()"
     @open-search.window="showSearch()"
-    class="w-full h-full flex items-center bg-white"
+    class="w-full h-full flex items-center bg-white rounded-lg"
 >
     <!-- Loading overlay -->
     <x-loading-overlay x-show="loading"/>
 
-    <div x-cloak x-ref='timeline' class="w-full relative"></div>
+    <div x-cloak x-ref='timeline' class="relative w-full h-full rounded-lg"></div>
 
     <!-- Event flyout -->
     <x-flyout x-model="openEventFlyout">
@@ -218,44 +220,51 @@
         <x-search/>
     </x-flyout>
 
-    <!-- Top right elements -->
-    <div class="fixed flex space-x-4 top-0 right-0 pr-8 pt-8 z-10 md:pr-12 md:pt-12">
-        <!-- Reset view button -->
-        <button x-tooltip="'Ajuster la vue'"
-                @click="timeline.fit();" type="button"
-                class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+    <!-- Bottom elements -->
+    <div class="fixed bottom-0 left-0 pb-8 px-4 w-full z-10 md:pb-7">
+        <div
+            class="flex justify-between w-full md:max-w-2xl md:mx-auto md:rounded-full md:p-3 md:bg-indigo-50/40 md:backdrop-blur-xs md:shadow md:hover:shadow-xl md:transition"
         >
-            <x-icons.back size="size-5"/>
-        </button>
+            <!-- Bottom left elements -->
+            <div class="flex space-x-4 items-center">
+                <!-- Reset view button -->
+                <button x-tooltip="'Ajuster la vue'"
+                        @click="timeline.fit();" type="button"
+                        class="text-sm font-semibold whitespace-nowrap h-min rounded-full p-3 bg-indigo-50 text-indigo-500 shadow hover:shadow-xl hover:bg-white outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 md:text-base md:bg-transparent md:shadow-none md:hover:shadow-none transition"
+                >
+                    <x-icons.back size="size-5 md:size-6"/>
+                </button>
 
-    </div>
+            </div>
 
-    <!-- Bottom right elements -->
-    <div class="fixed flex space-x-4 bottom-0 right-0 pr-8 pb-8 z-10 md:pr-12 md:pb-12">
-        <!-- Open search button -->
-        <button x-tooltip="'Filtrer les événements'"
-                @click="$el.blur(); $dispatch('open-search')" type="button"
-                class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-        >
-            <x-icons.solid-funnel size="size-6"/>
-        </button>
+            <!-- Bottom right elements -->
+            <div class="flex space-x-4 items-center">
+                <!-- Open search button -->
+                <button x-tooltip="'Filtrer les événements'"
+                        @click="$el.blur(); $dispatch('open-search')" type="button"
+                        class="text-sm font-semibold whitespace-nowrap h-min rounded-full p-3 bg-indigo-50 text-indigo-500 shadow hover:shadow-xl hover:bg-white outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 md:text-base md:bg-transparent md:shadow-none md:hover:shadow-none transition"
+                >
+                    <x-icons.solid-funnel size="size-5 md:size-6"/>
+                </button>
 
-        <!-- List tags button -->
-        <button x-tooltip="'Gérer les tags'"
-                @click="$el.blur(); $dispatch('list-tags')" type="button"
-                class="whitespace-nowrap h-min rounded-full bg-slate-100 p-3 text-base font-semibold text-indigo-500 shadow hover:shadow-xl hover:bg-slate-50 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-        >
-            <x-icons.solid-tag size="size-6"/>
-        </button>
+                <!-- List tags button -->
+                <button x-tooltip="'Gérer les tags'"
+                        @click="$el.blur(); $dispatch('list-tags')" type="button"
+                        class="text-sm font-semibold whitespace-nowrap h-min rounded-full p-3 bg-indigo-50 text-indigo-500 shadow hover:shadow-xl hover:bg-white outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 md:text-base md:bg-transparent md:shadow-none md:hover:shadow-none transition"
+                >
+                    <x-icons.solid-tag size="size-5 md:size-6"/>
+                </button>
 
-        <!-- Add event button -->
-        <button x-tooltip="'Ajouter un événement'"
-                @click="$el.blur(); $dispatch('add-event')" type="button"
-                class="flex items-center justify-center space-x-1 whitespace-nowrap h-min rounded-full bg-indigo-600 px-4 py-3 text-base font-semibold text-white shadow hover:shadow-xl hover:bg-indigo-500 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-        >
-            <x-icons.plus size="size-6"/>
+                <!-- Add event button -->
+                <button x-tooltip="'Ajouter un événement'"
+                        @click="$el.blur(); $dispatch('add-event')" type="button"
+                        class="text-sm font-semibold flex items-center justify-center space-x-1 whitespace-nowrap h-min rounded-full px-4 py-3 bg-indigo-600 text-white shadow hover:shadow-xl hover:bg-indigo-500 outline-0 outline-transparent focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 md:text-base md:shadow-none md:hover:shadow-none transition"
+                >
+                    <x-icons.plus size="size-5 md:size-6"/>
 
-            <span aria-hidden="true">Événement</span>
-        </button>
+                    <span aria-hidden="true">Événement</span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

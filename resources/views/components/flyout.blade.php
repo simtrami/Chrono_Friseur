@@ -2,7 +2,7 @@
      x-dialog
 >
     <!-- Overlay -->
-    <div x-dialog:overlay x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+    <div x-dialog:overlay x-transition.opacity class="fixed inset-0 bg-black/25 backdrop-blur-xs"></div>
 
     <!-- Panel -->
     <div class="fixed inset-y-0 right-0 max-w-lg w-full max-h-dvh min-h-dvh">
