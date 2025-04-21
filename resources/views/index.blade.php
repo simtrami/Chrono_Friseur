@@ -15,7 +15,8 @@
 <x-notification/>
 
 <!-- Timeline -->
-<x-timeline/>
+<x-timeline>
+</x-timeline>
 
 <script>
 

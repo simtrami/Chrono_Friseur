@@ -3,10 +3,42 @@
     x-data="{
         submit() {
             if (mode === 'editTag') {
-                updateTag();
+                this.updateTag();
             } else if (mode === 'addTag') {
-                addTag();
+                this.addTag();
             }
+        },
+        updateTag() {
+            this.tagRequestInProgress[this.formTag.id] = true;
+            this.tagFormErrors = { name: [], color: [] };
+            axios.put('/tags/' + this.formTag.id, this.formTag)
+                .then(response => {
+                    this.tags.updateOnly(this.makeTagData(response.data));
+                    this.mode = 'listTags';
+                }).catch(error => {
+                    if (error.response.status === 422) {
+                        this.tagFormErrors = error.response.data.errors
+                    } else {
+                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
+                    }
+                }).finally(() => { this.tagRequestInProgress[this.formTag.id] = false; })
+        },
+        addTag() {
+            this.tagRequestInProgress[this.formTag.id] = true;
+            this.tagFormErrors = { name: [], color: [] };
+            axios.post('/tags', this.formTag)
+                .then(response => {
+                    this.tags.add(this.makeTagData(response.data));
+                    this.tagRequestInProgress[response.data.id] = false;
+                    this.preventTagDelete[response.data.id] = true;
+                    this.mode = 'listTags';
+                }).catch(error => {
+                    if (error.response.status === 422) {
+                        this.tagFormErrors = error.response.data.errors;
+                    } else {
+                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' });
+                    }
+                }).finally(() => { this.tagRequestInProgress[this.formTag.id] = false; })
         }
     }"
     @submit.prevent="submit()"
