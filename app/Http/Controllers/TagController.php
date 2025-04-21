@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTagRequest;
 use App\Http\Requests\UpdateTagRequest;
-use App\Models\Event;
 use App\Services\TagService;
+use Illuminate\Http\JsonResponse;
 use Spatie\Tags\Tag;
 
 class TagController extends Controller
@@ -51,19 +51,13 @@ class TagController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tag $tag)
+    public function destroy(Tag $tag, TagService $tagService): JsonResponse
     {
-        // Gather events which had this tag
-        $affected_events = Event::withAnyTags($tag)->get();
-
-        $tag->delete();
-
-        // Load tags after removal to get a fresh list
-        $affected_events->loadMissing('tags');
+        $affectedEvents = $tagService->deleteTag($tag);
 
         return response()->json([
             'message' => 'Tag supprimé avec succès.',
-            'affected_events' => $affected_events,
+            'affected_events' => $affectedEvents,
         ]);
     }
 }

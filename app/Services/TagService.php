@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Event;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Spatie\Tags\Tag;
 
 class TagService
@@ -52,5 +54,24 @@ class TagService
         $tag->update($attributes);
 
         return $tag->refresh();
+    }
+
+    /**
+     * Delete a tag and return affected events with their updated tags
+     *
+     * @param  Tag  $tag  The tag to delete
+     * @return Collection Events affected by tag deletion
+     */
+    public function deleteTag(Tag $tag): Collection
+    {
+        // Gather events which had this tag
+        $affectedEvents = Event::withAnyTags($tag)->get();
+
+        $tag->delete();
+
+        // Load tags after removal to get a fresh list
+        $affectedEvents->loadMissing('tags');
+
+        return $affectedEvents;
     }
 }
