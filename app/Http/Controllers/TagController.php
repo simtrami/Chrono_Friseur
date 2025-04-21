@@ -23,11 +23,11 @@ class TagController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTagRequest $request)
+    public function store(StoreTagRequest $request, TagService $tagService)
     {
         $attributes = $request->validated();
 
-        return Tag::create($attributes);
+        return $tagService->createTag($attributes);
     }
 
     /**
@@ -41,13 +41,11 @@ class TagController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTagRequest $request, Tag $tag)
+    public function update(UpdateTagRequest $request, TagService $tagService, Tag $tag)
     {
         $attributes = $request->validated();
-        $tag->update($attributes);
-        $tag->refresh();
 
-        return $tag;
+        return $tagService->updateTag($tag, $attributes);
     }
 
     /**
