@@ -35,6 +35,36 @@ class EventService
     }
 
     /**
+     * Create a new event with optional tags
+     *
+     * @param  array  $attributes  Event attributes including optional tags
+     * @return Event The newly created event
+     */
+    public function createEvent(array $attributes): Event
+    {
+        // Create the event with basic attributes
+        $event = Event::create($attributes);
+
+        // Sync tags if present
+        if (! empty($attributes['tags'])) {
+            $this->syncEventTags($event, $attributes['tags']);
+        }
+
+        return $event;
+    }
+
+    /**
+     * Sync tags to an event
+     *
+     * @param  Event  $event  The event to sync tags to
+     * @param  array  $tags  Array of tag objects with IDs
+     */
+    private function syncEventTags(Event $event, array $tags): void
+    {
+        $event->tags()->sync($this->extractTagIds($tags));
+    }
+
+    /**
      * Extract tag IDs from an array of tag objects
      */
     private function extractTagIds(array $tags): array

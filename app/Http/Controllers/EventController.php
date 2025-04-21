@@ -24,14 +24,12 @@ class EventController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreEventRequest $request)
+    public function store(StoreEventRequest $request, EventService $eventService)
     {
         $attributes = $request->validated();
-        $event = Event::create($attributes);
-        $event->tags()->sync(array_column($attributes['tags'], 'id'));
-        $event->loadMissing('tags:id,name,color');
 
-        return $event;
+        return $eventService->createEvent($attributes)
+            ->loadMissing('tags:id,name,color');
     }
 
     /**
