@@ -175,11 +175,11 @@
                 this.preventEventDelete = true;
                 this.eventRequestInProgress = true;
                 axios.delete('/events/' + this.selectedEvent.id)
-                    .then(() => {
+                    .then(response => {
                         this.events.remove(this.selectedEvent.id);
                         this.selectedEvent = { id: null, name: null, description: null, date: null, tags: [] };
                         this.openEventFlyout = false;
-                        this.$dispatch('notify', { content: `L'événement a bien été supprimé.`, type: 'success' })
+                        this.$dispatch('notify', { content: response.data.message, type: 'success' })
                     }).catch(error => {
                         if (error.status === 404) {
                             this.$dispatch('notify', { content: `L'événement est introuvable.`, type: 'error' })
@@ -265,7 +265,7 @@
                         this.selectedEvent = { id: null, name: null, description: null, date: null, tags: [] };
                         this.formEvent = { id: null, name: null, description: null, date: null, tags: [] };
 
-                        this.$dispatch('notify', { content: `Le tag a bien été supprimé.`, type: 'success' });
+                        this.$dispatch('notify', { content: response.data.message, type: 'success' });
                     }).catch(error => {
                         if (error.status === 404) {
                             this.$dispatch('notify', { content: `Le tag n'existe pas.`, type: 'error' });

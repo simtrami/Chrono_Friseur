@@ -56,7 +56,7 @@ class TagController extends Controller
         $affectedEvents = $tagService->deleteTag($tag);
 
         return response()->json([
-            'message' => 'Tag supprimé avec succès.',
+            'message' => 'Le tag a bien été supprimé.',
             'affected_events' => $affectedEvents,
         ]);
     }

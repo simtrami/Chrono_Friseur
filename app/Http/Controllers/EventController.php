@@ -59,6 +59,6 @@ class EventController extends Controller
     {
         $eventService->deleteEvent($event);
 
-        return response()->json(['message' => 'Événement supprimé avec succès.']);
+        return response()->json(['message' => "L'événement a bien été supprimé."]);
     }
 }
