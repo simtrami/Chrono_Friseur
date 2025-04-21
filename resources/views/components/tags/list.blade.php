@@ -1,4 +1,18 @@
-<div {{ $attributes->merge(['class' => 'flex flex-col my-2']) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-col my-2']) }}
+     x-data="{
+        formTag: {
+            id: null,
+            name: { fr: null },
+            color: '#000000'
+        },
+        tagFormErrors: { name: [], color: [] },
+        showAddTag() {
+            this.mode = 'addTag';
+            this.formTag = { id: 0, name: { fr: '' }, color: '#000000' };
+            this.tagFormErrors = { name: [], color: [] };
+        }
+    }"
+>
     <ul role="list" class="divide-y text-gray-800 divide-gray-300 -mb-4">
         <template x-for="tag of tags.get({fields: ['id', 'color', 'name']})" :key="tag.id">
         <li class="w-full py-5 px-2 hover:bg-gray-50">

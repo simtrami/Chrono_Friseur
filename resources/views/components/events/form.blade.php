@@ -1,7 +1,5 @@
-<form
-    {{ $attributes }}
-    :id="mode + '-event-form'"
-    x-data="{
+<form {{ $attributes }}
+      x-data="{
         picker: null,
         init() {
             this.picker = flatpickr(this.$refs.picker, {
@@ -23,9 +21,61 @@
                 return 'Choisir des tags...';
             }
             return this.formEvent.tags.length === 1 ? this.formEvent.tags[0].name.fr : `${this.formEvent.tags.length} sélectionnés`;
+        },
+        submit() {
+            if (mode === 'editEvent') {
+                this.updateEvent();
+            } else if (mode === 'addEvent') {
+            console.log('pouet')
+                this.addEvent();
+            }
+        },
+        cancelEditEvent() {
+            this.mode = 'showEvent';
+            var e = this.events.get(this.selectedEvent.id);
+            this.formEvent = {
+                id: e.id,
+                name: e.name,
+                description: e.description,
+                date: e.date,
+                tags: e.tags
+            };
+        },
+        updateEvent() {
+            this.eventRequestInProgress = true;
+            this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
+            axios.put('/events/' + this.formEvent.id, this.formEvent)
+                .then(response => {
+                    this.events.updateOnly(this.makeEventData(response.data));
+                    this.selectedEvent = this.events.get(response.data.id);
+                    this.mode = 'showEvent';
+                }).catch(error => {
+                    if (error.response.status === 422) {
+                        this.eventFormErrors = error.response.data.errors
+                    } else {
+                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de la modification.`, type: 'error' })
+                    }
+                }).finally(() => { this.eventRequestInProgress = false; })
+        },
+        addEvent() {
+            this.eventRequestInProgress = true;
+            this.eventFormErrors = { name: [], description: [], date: [], tags: [] };
+            axios.post('/events', this.formEvent)
+                .then(response => {
+                    this.events.add(this.makeEventData(response.data));
+                    this.openEventFlyout = false;
+                    this.formEvent = { id: null, name: null, description: null, date: null, tags: [] }
+                }).catch(error => {
+                    if (error.response.status === 422) {
+                        this.eventFormErrors = error.response.data.errors
+                    } else {
+                        this.$dispatch('notify', { content: `Une erreur s'est produite lors de l'ajout.`, type: 'error' })
+                    }
+                }).finally(() => { this.eventRequestInProgress = false; })
         }
     }"
-    @submit.prevent="mode === 'editEvent' ? updateEvent() : addEvent()"
+      @submit.prevent="submit()"
+      :id="`event-form-${formEvent.id ?? 'add'}`"
 >
     <div class="flex flex-col my-2 space-y-3 max-w-2xl text-gray-500 border-b border-gray-900/10 pb-6">
         <!-- Name -->
@@ -61,7 +111,9 @@
                               :class="{ '!text-gray-400': $listbox.value.length !== 1 }"
                         ></span>
 
-                        <x-icons.chevron-down class="shrink-0 text-gray-300 group-hover:text-gray-800" size="size-5"/>
+                        <x-icons.chevron-down class="shrink-0 text-gray-300 group-hover:text-gray-800"
+                                              size="size-5"
+                        />
                     </button>
 
                     <!-- Options -->
@@ -85,7 +137,7 @@
                             :class="{
                                 'bg-gray-100': $listboxOption.isActive,
                                 'text-gray-900': ! $listboxOption.isActive && ! $listboxOption.isDisabled,
-                                'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled,
+                                'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled
                             }"
                         >
                             <div class="w-6 shrink-0">
@@ -138,5 +190,49 @@
             <x-form-error x-text="error"/>
             </template>
         </div>
+    </div>
+
+    <!-- Actions for editEvent -->
+    <div x-show="mode === 'editEvent'" class="mt-6 flex justify-end space-x-2">
+        <button @click.prevent="cancelEditEvent()" type="button"
+                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
+        ><span>Annuler</span></button>
+
+        <button type="submit" :disabled="eventRequestInProgress"
+                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
+        >
+            <template x-if="!eventRequestInProgress">
+            <x-icons.pencil-square size="size-5"/>
+            </template>
+
+            <template x-if="eventRequestInProgress">
+            <x-icons.spinner size="size-5"/>
+            </template>
+
+            <span>Appliquer</span>
+        </button>
+    </div>
+
+    <!-- Actions for addEvent -->
+    <div x-show="mode === 'addEvent'" class="mt-6 flex justify-end space-x-2">
+        <button @click.prevent="$dialog.close()" type="button"
+                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
+        ><span>Annuler</span></button>
+
+        <button type="submit" :disabled="eventRequestInProgress"
+                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
+        >
+            <template x-if="!eventRequestInProgress">
+            <x-icons.plus size="size-5"/>
+            </template>
+
+            <template x-if="eventRequestInProgress">
+            <x-icons.spinner size="size-5"/>
+            </template>
+
+            <span>Ajouter</span>
+        </button>
     </div>
 </form>

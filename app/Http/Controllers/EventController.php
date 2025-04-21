@@ -6,93 +6,86 @@ use App\Http\Requests\SearchEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\EventService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 
 class EventController extends Controller
 {
+    private EventService $eventService;
+
+    /**
+     * Constructor with dependency injection
+     */
+    public function __construct(EventService $eventService)
+    {
+        $this->eventService = $eventService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index(SearchEventRequest $request)
+    public function index(SearchEventRequest $request): Collection
     {
         $filters = $request->validated();
-        $eventsQuery = Event::query();
 
-        if (isset($filters['fulltext'])) {
-            $eventsQuery = $eventsQuery->whereFullText(
-                ['name', 'description'],
-                $filters['fulltext']
-            );
-        }
-        if (! empty($filters['with_tags'])) {
-            $eventsQuery = $eventsQuery
-                ->whereHas('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id',
-                        array_map(fn ($tag) => $tag['id'], $filters['with_tags'])
-                    );
-                });
-        }
-        if (! empty($filters['without_tags'])) {
-            $eventsQuery = $eventsQuery
-                ->whereDoesntHave('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id',
-                        array_map(fn ($tag) => $tag['id'], $filters['without_tags'])
-                    );
-                });
-        }
-        if (isset($filters['after'])) {
-            $eventsQuery = $eventsQuery
-                ->where('date', '>', $filters['after']);
-        }
-        if (isset($filters['before'])) {
-            $eventsQuery = $eventsQuery
-                ->where('date', '<', $filters['before']);
-        }
-
-        return $eventsQuery->with('tags')->get();
+        return $this->eventService->filterEvents($filters)
+            ->with($this->getTagsRelation())->get();
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreEventRequest $request)
+    public function store(StoreEventRequest $request): Event
     {
         $attributes = $request->validated();
-        $event = Event::create($attributes);
-        $event->tags()->sync(array_column($attributes['tags'], 'id'));
-        $event->loadMissing('tags:id,name,color');
 
-        return $event;
+        return $this->eventService->createEvent($attributes)
+            ->loadMissing($this->getTagsRelation());
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Event $event)
+    public function show(Event $event): Event
     {
-        return $event->loadMissing('tags:id,name,color');
+        return $event
+            ->loadMissing($this->getTagsRelation());
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEventRequest $request, Event $event)
+    public function update(UpdateEventRequest $request, Event $event): Event
     {
         $attributes = $request->validated();
-        $event->tags()->sync(array_column($attributes['tags'], 'id'));
-        $event->update($attributes);
-        $event->loadMissing('tags:id,name,color');
 
-        return $event;
+        return $this->eventService->updateEvent($event, $attributes)
+            ->loadMissing($this->getTagsRelation());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Event $event)
+    public function destroy(Event $event): JsonResponse
     {
-        $event->delete();
+        $this->eventService->deleteEvent($event);
 
-        return response()->json(['message' => 'Événement supprimé avec succès.']);
+        return response()->json([
+            'message' => "L'événement a bien été supprimé.",
+        ]);
+    }
+
+    /**
+     * Get the tags relation with the attributes to include in responses.
+     */
+    private function getTagsRelation(): string
+    {
+        // tags:id,name,color
+        return 'tags:'.implode(',', [
+            'id',
+            'name',
+            'color',
+        ]);
     }
 }

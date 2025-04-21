@@ -1,4 +1,48 @@
-<div {{ $attributes->merge(['class' => "flex items-center justify-between"]) }}>
+<div {{ $attributes->merge(['class' => "flex items-center justify-between"]) }}
+     x-data="{
+        showEditTag(tag) {
+            this.mode = 'editTag';
+            this.formTag = { id: tag.id, name: { fr: tag.name.fr }, color: tag.color };
+            this.tagFormErrors = { name: [], color: [] };
+        },
+        deleteTag(tag) {
+            // Must execute this action twice in 3 seconds to effectively delete.
+            if (this.preventTagDelete[tag.id]) {
+                this.preventTagDelete[tag.id] = false;
+                setTimeout(() => {
+                    this.preventTagDelete[tag.id] = true;
+                }, 3000);
+            } else {
+                this.preventTagDelete[tag.id] = true;
+                this.tagRequestInProgress[tag.id] = true;
+                axios.delete('/tags/' + tag.id)
+                    .then(response => {
+                        this.tags.remove(tag.id);
+                        // Update events which had this tag
+                        if (response.data.affected_events) {
+                            response.data.affected_events.forEach(e => {
+                                this.events.updateOnly(this.makeEventData(e));
+                            })
+                        }
+                        // Reset possible copies of an event which had this tag
+                        this.selectedEvent = { id: null, name: null, description: null, date: null, tags: [] };
+                        this.formEvent = { id: null, name: null, description: null, date: null, tags: [] };
+
+                        this.$dispatch('notify', { content: response.data.message, type: 'success' });
+                    }).catch(error => {
+                        if (error.status === 404) {
+                            this.$dispatch('notify', { content: `Le tag n'existe pas.`, type: 'error' });
+                        } else {
+                            this.$dispatch('notify', { content: `Une erreur s'est produite lors de la suppression.`, type: 'error' });
+                        }
+                    }).finally(() => {
+                        delete this.preventTagDelete[tag.id];
+                        delete this.tagRequestInProgress[tag.id];
+                    })
+            }
+        }
+    }"
+>
     <div class="flex space-x-2 items-center">
         <x-icons.solid-tag size="size-5" x-bind:style="`fill: ${tag.color ?? 'black'}`"/>
 
