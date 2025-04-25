@@ -45,7 +45,7 @@ WORKDIR /srv
 # In other cases, it would be possible to copy composer files
 # first, to leverage Docker's layer caching mechanism.
 # -----------------------------------------------------------
-COPY ../../common/php-fpm /srv
+COPY . /srv
 
 # Install Composer and dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /srv
 
 # Copy Laravel application code
-COPY ../../common/php-fpm /srv
+COPY . /srv
 
 # Install Node.js dependencies and build assets
 RUN npm install && npm run build
