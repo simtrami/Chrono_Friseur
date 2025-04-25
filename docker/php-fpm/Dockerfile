@@ -1,9 +1,9 @@
 # Stage 1: Build environment and Composer dependencies
 FROM php:8.3-fpm AS builder
 
-# Install system dependencies and PHP extensions for Laravel with MySQL/PostgreSQL support.
-# Dependencies in this stage are only required for building the final image.
-# Node.js and asset building are handled in the Nginx stage, not here.
+# Install system dependencies and PHP extensions required for Laravel + MySQL/PostgreSQL support
+# Some dependencies are required for PHP extensions only in the build stage
+# We don't need to install Node.js or build assets, as it is done in the next stage
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
@@ -28,12 +28,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set the working directory inside the container
-WORKDIR /var/www
+WORKDIR /srv
 
 # Copy the entire Laravel application code into the container
 # -----------------------------------------------------------
-# In Laravel, `composer install` may trigger scripts
-# needing access to application code.
+# In Laravel, the `composer install` command often triggers
+# scripts that need access to the entire application code.
 # For example, the `post-autoload-dump` event might execute
 # Artisan commands like `php artisan package:discover`. If the
 # application code (including the `artisan` file) is not
@@ -45,13 +45,32 @@ WORKDIR /var/www
 # In other cases, it would be possible to copy composer files
 # first, to leverage Docker's layer caching mechanism.
 # -----------------------------------------------------------
-COPY . /var/www
+COPY ../../common/php-fpm /srv
 
 # Install Composer and dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer install --no-dev --optimize-autoloader --no-interaction --no-progress --prefer-dist
 
-# Stage 2: Production environment
+# Stage 2: Build assets
+FROM debian AS vite
+
+# Install Node.js and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    nodejs \
+    npm \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set working directory
+WORKDIR /srv
+
+# Copy Laravel application code
+COPY ../../common/php-fpm /srv
+
+# Install Node.js dependencies and build assets
+RUN npm install && npm run build
+
+# Stage 3: Production environment
 FROM php:8.3-fpm
 
 # Install only runtime libraries needed in production
@@ -74,7 +93,7 @@ COPY ./docker/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Copy the initial storage structure
-COPY ./storage /var/www/storage-init
+COPY ./storage /srv/storage-init
 
 # Copy PHP extensions and libraries from the builder stage
 COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
@@ -96,13 +115,19 @@ RUN sed -i '/\[www\]/a pm.status_path = /status' /usr/local/etc/php-fpm.d/zz-doc
 #RUN sed -i 's/variables_order = "GPCS"/variables_order = "EGPCS"/' "$PHP_INI_DIR/php.ini"
 
 # Copy the application code and dependencies from the build stage
-COPY --from=builder /var/www /var/www
+COPY --from=builder /srv /srv
+
+# Copy Laravel's public assets from the vite stage
+# -----------------------------------------------------------
+# We only need the 'public' directory from our Laravel app.
+# -----------------------------------------------------------
+COPY --from=vite /srv/public /srv/public
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /srv
 
 # Ensure correct permissions
-RUN chown -R www-data:www-data /var/www
+RUN chown -R www-data:www-data /srv
 
 # Switch to the non-privileged user to run the application
 USER www-data

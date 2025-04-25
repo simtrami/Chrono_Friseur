@@ -4,19 +4,23 @@
 # For more help, visit the .dockerignore file reference guide at
 # https://docs.docker.com/go/build-context-dockerignore/
 
+**/.cache
 **/.classpath
 **/.dockerignore
 **/.env
+**/.fleet
 **/.git
 **/.gitignore
 **/.gitattributes
+**/.idea
+**/.next
+**/.nova
 **/.project
 **/.settings
 **/.toolstarget
 **/.vs
 **/.vscode
-**/.next
-**/.cache
+**/.zed
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
@@ -34,6 +38,8 @@
 **/values.dev.yaml
 **/vendor
 **/.DS_Store
+/public/build
+/storage/logs/*.log
 .editorconfig
 .env.example
 LICENSE
