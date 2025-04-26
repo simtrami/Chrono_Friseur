@@ -1,12 +1,23 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/login', function () {
+    return view('login');
+})->name('login');
+
+Route::controller(AuthenticationController::class)->group(function () {
+    Route::get('/auth/github', 'redirectToGithub')->name('auth.github');
+    Route::get('/auth/github/callback', 'handleGithubCallback');
+    Route::get('/logout', 'logout')->name('logout');
+});
+
 Route::get('/', function () {
     return view('index');
-});
+})->name('timeline')->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
