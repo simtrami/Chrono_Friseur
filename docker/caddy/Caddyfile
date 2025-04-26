@@ -1,5 +1,8 @@
 {
     auto_https off
+    servers {
+        trusted_proxies static private_ranges
+    }
 }
 
 :80 {
@@ -12,17 +15,11 @@
         output stdout
 
         format filter {
-            # Delete the User-Agent request header
-            request>headers>User-Agent delete
             # Redact multiple sensitive cookies.
             request>headers>Cookie cookie {
                 replace session REDACTED
                 delete secret
             }
-            # Mask the remote address from the request,
-            # keeping the first 16 bits (i.e. 255.255.0.0) for IPv4 addresses, and the first 32 bits from IPv6 addresses.
-            request>remote_ip ip_mask 16 32
-            request>client_ip ip_mask 16 32
         }
     }
 }
