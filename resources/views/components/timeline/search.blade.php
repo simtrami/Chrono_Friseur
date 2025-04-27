@@ -177,7 +177,7 @@
                                         :class="{
                                         'bg-gray-100': $listboxOption.isActive,
                                         'text-gray-900': ! $listboxOption.isActive && ! $listboxOption.isDisabled,
-                                        'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled,
+                                        'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled
                                     }"
                                     >
                                         <div class="w-6 shrink-0">
@@ -250,7 +250,7 @@
                                         :class="{
                                         'bg-gray-100': $listboxOption.isActive,
                                         'text-gray-900': ! $listboxOption.isActive && ! $listboxOption.isDisabled,
-                                        'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled,
+                                        'text-gray-400 cursor-not-allowed': $listboxOption.isDisabled
                                     }"
                                     >
                                         <div class="w-6 shrink-0">

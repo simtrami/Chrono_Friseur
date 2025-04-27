@@ -17,13 +17,13 @@ class EventService
                 return $query->whereFullText(['name', 'description'], $filters['fulltext']);
             })
             ->when(! empty($filters['with_tags']), function ($query) use ($filters) {
-                return $query->whereHas('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id', $this->extractTagIds($filters['with_tags']));
+                return $query->whereHas('tags', function (Builder $subQuery) use ($filters) {
+                    $subQuery->whereIn('id', $this->extractTagIds($filters['with_tags']));
                 });
             })
             ->when(! empty($filters['without_tags']), function ($query) use ($filters) {
-                return $query->whereDoesntHave('tags', function (Builder $query) use ($filters) {
-                    $query->whereIn('id', $this->extractTagIds($filters['without_tags']));
+                return $query->whereDoesntHave('tags', function (Builder $subQuery) use ($filters) {
+                    $subQuery->whereIn('id', $this->extractTagIds($filters['without_tags']));
                 });
             })
             ->when(isset($filters['after']), function ($query) use ($filters) {
