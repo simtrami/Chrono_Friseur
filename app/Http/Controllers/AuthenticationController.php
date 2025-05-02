@@ -7,6 +7,7 @@ use App\Services\AuthenticationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticationController extends Controller
 {
@@ -67,8 +68,13 @@ class AuthenticationController extends Controller
         $user = User::where('github_id', $githubUser->id)->first();
 
         if (! $user) {
-            $user = $this->authenticationService
-                ->createOrUpdateUserFromGithub($githubUser);
+            try {
+                $user = $this->authenticationService
+                    ->createOrUpdateUserFromGithub($githubUser);
+            } catch (ValidationException $e) {
+                return redirect()->route('login')
+                    ->withErrors($e->validator);
+            }
         }
 
         return $this->loginAndRedirect($user);

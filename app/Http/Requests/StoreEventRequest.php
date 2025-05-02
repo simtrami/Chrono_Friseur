@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class StoreEventRequest extends FormRequest
@@ -13,8 +14,7 @@ class StoreEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO: changer lors de l'implémentation de User
-        return true;
+        return Auth::user() !== null;
     }
 
     /**

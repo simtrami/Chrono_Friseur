@@ -3,13 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class SearchEventRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // TODO: changer lors de l'implémentation de User
-        return true;
+        return Auth::user() !== null;
     }
 
     public function rules(): array
