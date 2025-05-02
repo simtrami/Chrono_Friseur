@@ -98,8 +98,8 @@ return [
         'string' => 'Le champ :attribute ne doit pas contenir plus de :max caractères.',
     ],
     'max_digits' => 'Le champ :attribute ne doit pas contenir plus de :max chiffres.',
-    'mimes' => 'Le champ :attribute doit être un fichier de type&nbsp;: :values.',
-    'mimetypes' => 'Le champ :attribute doit être un fichier de type&nbsp;: :values.',
+    'mimes' => 'Le champ :attribute doit être un fichier de type : :values.',
+    'mimetypes' => 'Le champ :attribute doit être un fichier de type : :values.',
     'min' => [
         'array' => 'Le champ :attribute doit contenir au moins :min éléments.',
         'file' => 'Le champ :attribute doit être d’au moins :min kilo-octets.',
