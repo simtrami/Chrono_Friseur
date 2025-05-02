@@ -26,7 +26,6 @@
             if (mode === 'editEvent') {
                 this.updateEvent();
             } else if (mode === 'addEvent') {
-            console.log('pouet')
                 this.addEvent();
             }
         },

@@ -204,7 +204,7 @@
     <x-flyout x-model="openTagFlyout">
         <!-- Title -->
         <x-slot:title>
-            <span x-show="mode === 'listTags' || mode === 'editTag' || mode === 'addTag'">Gestion des tags</span>
+            <span>Gestion des tags</span>
         </x-slot>
 
         <x-tags.list/>

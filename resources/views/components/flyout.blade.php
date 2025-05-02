@@ -1,5 +1,5 @@
 <div {{ $attributes->merge(['class' => 'fixed inset-0 overflow-hidden z-20']) }}
-     x-dialog
+     x-dialog x-cloak
 >
     <!-- Overlay -->
     <div x-dialog:overlay x-transition.opacity class="fixed inset-0 bg-black/25 backdrop-blur-xs"></div>
