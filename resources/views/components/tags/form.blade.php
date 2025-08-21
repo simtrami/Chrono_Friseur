@@ -70,7 +70,7 @@
             <button x-tooltip="'Annuler'" @click="mode = 'listTags'" type="button"
                     class="relative flex items-center justify-center whitespace-nowrap rounded-full p-1.5 text-gray-800 font-semibold outline-0 outline-transparent  hover:bg-gray-800/10 focus:outline-2 focus:outline-gray-600 transition"
             >
-                <x-icons.cross size="size-5"/>
+                <x-icons.x-mark size="size-5"/>
             </button>
 
             <button x-tooltip="'Appliquer'" type="submit" :disabled="tagRequestInProgress[formTag.id]"

@@ -73,7 +73,7 @@
                 <!-- Remove button -->
                 <div class="flex items-center">
                     <button @click="transitionOut()" type="button" class="inline-flex items-center font-medium justify-center p-1.5 rounded-md hover:bg-gray-800/5 text-gray-400 hover:text-gray-800">
-                        <x-icons.cross size="size-5"/>
+                        <x-icons.x-mark size="size-5"/>
                         <span class="sr-only">Fermer la notification</span>
                     </button>
                 </div>

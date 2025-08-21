@@ -215,24 +215,34 @@
     </div>
 
     <!-- Actions for addEvent -->
-    <div x-show="mode === 'addEvent'" class="mt-6 flex justify-end space-x-2">
-        <button @click.prevent="$dialog.close()" type="button"
-                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
-        ><span>Annuler</span></button>
-
-        <button type="submit" :disabled="eventRequestInProgress"
-                class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
-                :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
+    <div x-show="mode === 'addEvent'" class="mt-6 flex justify-between items-center space-x-2">
+        <!-- CSV Import button -->
+        <button x-tooltip="'Importer un fichier CSV'" type="button"
+                @click="$el.blur(); $dispatch('open-csv-import')"
+                class="relative flex items-center justify-center whitespace-nowrap h-min rounded-full p-1.5 text-indigo-500 text-sm outline-0 outline-transparent  hover:text-indigo-800 hover:bg-indigo-800/10 focus:outline-2 focus:outline-indigo-600 transition"
         >
-            <template x-if="!eventRequestInProgress">
-            <x-icons.plus size="size-5"/>
-            </template>
-
-            <template x-if="eventRequestInProgress">
-            <x-icons.spinner size="size-5"/>
-            </template>
-
-            <span>Ajouter</span>
+            <x-icons.document-arrow-up size="size-6"/>
         </button>
+
+        <div class="flex justify-end space-x-2">
+            <button @click.prevent="$dialog.close()" type="button"
+                    class="relative flex items-center justify-center whitespace-nowrap rounded-lg border border-transparent bg-transparent px-3 py-2 font-semibold text-gray-800 hover:bg-gray-800/10 transition"
+            ><span>Annuler</span></button>
+
+            <button type="submit" :disabled="eventRequestInProgress"
+                    class="relative flex items-center justify-center space-x-1 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-white font-semibold bg-indigo-600 outline-0 outline-transparent hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-700 transition"
+                    :class="{'opacity-50 cursor-not-allowed': eventRequestInProgress}"
+            >
+                <template x-if="!eventRequestInProgress">
+                <x-icons.plus size="size-5"/>
+                </template>
+
+                <template x-if="eventRequestInProgress">
+                <x-icons.spinner size="size-5"/>
+                </template>
+
+                <span>Ajouter</span>
+            </button>
+        </div>
     </div>
 </form>

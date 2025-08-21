@@ -23,7 +23,7 @@
                     >
                         <span class="sr-only">Fermer le panneau</span>
 
-                        <x-icons.cross size="size-5"/>
+                        <x-icons.x-mark size="size-5"/>
                     </button>
                 </div>
 
