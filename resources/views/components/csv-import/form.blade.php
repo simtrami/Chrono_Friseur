@@ -81,17 +81,16 @@
                         'Content-Type': 'multipart/form-data'
                     }
                 }).then(response => {
-                    // Set success state
+                    // Set the success state
                     this.csvValidationState = 'success';
                     this.csvValidationMessage = response.data.message;
                     this.csvFileInfo = response.data.file_info;
                 }).catch(error => {
-                    // Set error state
+                    // Set the error state
                     this.csvValidationState = 'error';
 
                     if (error.response && error.response.data.errors) {
-                        const errors = error.response.data.errors;
-                        this.csvValidationMessage = Object.values(errors).flat().join(' ');
+                        this.csvValidationMessage = Object.values(error.response.data.errors).flat().join('<br/>');
                     } else {
                         this.csvValidationMessage = 'Une erreur est survenue lors de la validation du fichier.';
                     }
@@ -167,7 +166,9 @@
                      class="bg-green-50 border border-green-200 rounded-md p-4"
                 >
                     <div class="flex">
-                        <x-icons.check-circle size="size-5" class="text-green-400"/>
+                        <div class="w-5">
+                            <x-icons.check-circle size="size-5" class="text-green-400"/>
+                        </div>
 
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-green-800">Fichier valide !</h3>
@@ -192,13 +193,15 @@
                 <!-- Error State -->
                 <div x-show="csvValidationState === 'error'" class="bg-red-50 border border-red-200 rounded-md p-4">
                     <div class="flex">
-                        <x-icons.x-circle size="size-5" class="text-red-400"/>
+                        <div class="w-5">
+                            <x-icons.x-circle size="size-5" class="text-red-400"/>
+                        </div>
 
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-red-800">Fichier invalide</h3>
 
                             <div class="mt-2 text-sm text-red-700">
-                                <p x-text="csvValidationMessage"></p>
+                                <p x-html="csvValidationMessage"></p>
                             </div>
                         </div>
                     </div>
@@ -208,22 +211,26 @@
             <!-- CSV Format Info -->
             <div class="bg-indigo-50 border border-indigo-200 rounded-md p-4">
                 <div class="flex">
-                    <x-icons.information-circle size="size-5" class="text-indigo-400"/>
+                    <div class="w-5">
+                        <x-icons.information-circle size="size-5" class="text-indigo-400"/>
+                    </div>
 
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-indigo-800">Format CSV requis</h3>
 
                         <div class="mt-2 text-sm text-indigo-700">
                             <ul class="list-disc list-inside space-y-1">
-                                <li>Séparateur : point-virgule (;)</li>
+                                <li>Séparateur&nbsp;: point-virgule (;)</li>
 
-                                <li>Colonnes : Nom;Description;Date;Étiquettes</li>
+                                <li>Colonnes&nbsp;: Nom;Description;Date;Tags</li>
 
-                                <li>Date : format YYYY-MM-DD</li>
+                                <li>Colonnes obligatoires&nbsp;: Nom et Date</li>
 
-                                <li>Étiquettes : séparées par des virgules</li>
+                                <li>Date&nbsp;: format YYYY-MM-DD</li>
 
-                                <li>Maximum : 1000 lignes</li>
+                                <li>Tags&nbsp;: séparés par des virgules</li>
+
+                                <li>Maximum&nbsp;: 1000 lignes de données</li>
                             </ul>
                         </div>
                     </div>

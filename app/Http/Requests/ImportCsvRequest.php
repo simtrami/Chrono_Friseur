@@ -2,12 +2,23 @@
 
 namespace App\Http\Requests;
 
+use DateTime;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules\File;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Validation\Validator;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
 class ImportCsvRequest extends FormRequest
 {
+    /**
+     * Indicates if the validator should stop on the first rule failure.
+     *
+     * @var bool
+     */
+    protected $stopOnFirstFailure = true;
+
     public function authorize(): bool
     {
         return Auth::user() !== null;
@@ -16,7 +27,7 @@ class ImportCsvRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
@@ -44,129 +55,49 @@ class ImportCsvRequest extends FormRequest
     }
 
     /**
-     * Configure the validator instance.
+     * Get the "after" validation callables for the request.
      */
-    public function withValidator($validator): void
+    public function after(): array
     {
-        $validator->after(function ($validator) {
-            $file = $this->file('csv_file');
+        $file = SimpleExcelReader::create($this->file('csv_file'), 'csv')->useDelimiter(';');
 
-            // Read and validate the header line
-            $resource = fopen($file->getRealPath(), 'rb');
+        return [
+            function (Validator $validator) use ($file) {
+                $headers = $file->getHeaders();
 
-            // Check if fopen errored
-            if (! $resource) {
-                $validator->errors()->add('csv_file', 'Impossible de lire le fichier CSV.');
+                if ($headers !== ['Nom', 'Description', 'Date', 'Tags']) {
+                    $validator->errors()->add('csv_file',
+                        'En-têtes manquantes ou incorrectes. Attendu : Nom;Description;Date;Tags');
+                }
+            },
+            function (Validator $validator) use ($file) {
+                $rowCount = $file->getRows()->count(); // ->getRows() skips the headers
 
-                return;
-            }
+                if ($rowCount < 1) {
+                    $validator->errors()->add('csv_file',
+                        "Le fichier CSV doit contenir au moins une ligne de données en plus de l'en-tête.");
+                }
 
-            $firstLine = fgets($resource);
-            if (! $firstLine) {
-                $validator->errors()->add('csv_file', 'Le fichier CSV est vide.');
-                fclose($resource);
+                if ($rowCount > 1000) {
+                    $validator->errors()->add('csv_file',
+                        "Le fichier CSV ne peut pas contenir plus de 1000 lignes de données. Trouvé : {$rowCount} lignes de données.");
+                }
+            },
+            function (Validator $validator) use ($file) {
+                $rowNb = 2; // ->getRows() skips the headers
 
-                return;
-            }
+                $file->getRows()->each(function ($row) use (&$rowNb, $validator) {
+                    if (! $row['Nom'] || ! $row['Date']) {
+                        $validator->errors()->add('csv_file',
+                            "La ligne {$rowNb} n'a pas les colonnes requises (Nom et Date sont obligatoires).");
+                    } elseif (! $this->isValidDate($row['Date'])) {
+                        $validator->errors()->add('csv_file', "La date de la ligne {$rowNb} n'est pas valide.");
+                    }
 
-            // Check the column count first
-            $columns = explode(';', trim($firstLine));
-            if (count($columns) !== 4) {
-                $validator->errors()->add('csv_file',
-                    'Le fichier CSV doit contenir exactement 4 colonnes séparées par des points-virgules. Trouvé : '.count($columns).' colonnes.');
-                fclose($resource);
-
-                return;
-            }
-
-            // Skip header validation for now - just check column count
-            // TODO: Add back header name validation later
-
-            // Count total lines for row limit validation
-            $lineCount = 1; // Already read the first line
-            while (fgets($resource) !== false) {
-                $lineCount++;
-            }
-            fclose($resource);
-
-            // Check row count
-            if ($lineCount > 1000) {
-                $validator->errors()->add('csv_file',
-                    "Le fichier CSV ne peut pas contenir plus de 1000 lignes. Trouvé : {$lineCount} lignes de données.");
-
-                return;
-            }
-
-            // Check minimum rows
-            if ($lineCount < 2) {
-                $validator->errors()->add('csv_file',
-                    "Le fichier CSV doit contenir au moins une ligne de données en plus de l'en-tête.");
-
-                return;
-            }
-        });
-    }
-
-    /**
-     * Validate CSV file structure and content
-     */
-    private function validateCsvStructure($validator, $file): void
-    {
-        try {
-            $content = file_get_contents($file->getRealPath());
-            if ($content === false) {
-                $validator->errors()->add('csv_file', 'Impossible de lire le fichier CSV.');
-
-                return;
-            }
-
-            $lines = explode("\n", $content);
-
-            // Check if the file has at least a header + 1 data row
-            if (count($lines) < 2) {
-                $validator->errors()->add('csv_file',
-                    "Le fichier CSV doit contenir au moins une ligne de données en plus de l'en-tête.");
-
-                return;
-            }
-
-            // Check row count
-            if ($lines > 1000) {
-                $validator->errors()->add('csv_file', 'Le fichier CSV ne peut pas contenir plus de 1000 lignes.');
-
-                return;
-            }
-
-            // Simple header check
-            $headerLine = trim($lines[0]);
-            $headerParts = explode(';', $headerLine);
-
-            if (count($headerParts) !== 4) {
-                $validator->errors()->add('csv_file', 'Le fichier CSV doit contenir exactement 4 colonnes.');
-
-                return;
-            }
-
-            // Basic header validation (case-insensitive, accent insensitive)
-            $normalizedHeaders = array_map(static function ($header) {
-                $header = strtolower(trim($header));
-
-                return str_replace(['é', 'è', 'ê', 'ë'], 'e', $header);
-            }, $headerParts);
-
-            $requiredHeaders = ['name', 'description', 'date', 'tags'];
-            $missing = array_diff($requiredHeaders, $normalizedHeaders);
-
-            if (! empty($missing)) {
-                $validator->errors()->add('csv_file',
-                    'En-têtes manquantes ou incorrectes. Attendu : Nom;Description;Date;Tags');
-
-                return;
-            }
-
-        } catch (\Exception $e) {
-            $validator->errors()->add('csv_file', 'Erreur lors de la lecture du fichier CSV.');
-        }
+                    $rowNb++;
+                });
+            },
+        ];
     }
 
     /**
@@ -175,7 +106,7 @@ class ImportCsvRequest extends FormRequest
     private function isValidDate($date): bool
     {
         $format = 'Y-m-d';
-        $dateTime = \DateTime::createFromFormat($format, $date);
+        $dateTime = DateTime::createFromFormat($format, $date);
 
         return $dateTime && $dateTime->format($format) === $date;
     }
