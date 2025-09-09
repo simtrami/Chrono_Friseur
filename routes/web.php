@@ -24,7 +24,7 @@ Route::controller(AuthenticationController::class)->group(function () {
 |
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/', function () {
         return view('index');
     })->name('timeline');
@@ -37,6 +37,13 @@ Route::middleware(['auth'])->group(function () {
     | RESTful routes for Event and Tag resources.
     |
     */
+
+    // CSV Import routes
+    Route::post('/events/import/validate', [EventController::class, 'validateCsvImport'])
+        ->name('events.import.validate');
+
+    Route::post('/events/import', [EventController::class, 'importCsv'])
+        ->name('events.import');
 
     /**
      * Registers RESTful routes for the Event and Tag resources,
@@ -63,10 +70,4 @@ Route::middleware(['auth'])->group(function () {
      */
         'tags' => TagController::class,
     ]);
-
-    // CSV Import routes
-    Route::post('/events/import/validate', [EventController::class, 'validateCsvImport'])
-        ->name('events.import.validate');
-    Route::post('/events/import', [EventController::class, 'importCsv'])
-        ->name('events.import');
 });

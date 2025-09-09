@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\Event;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Spatie\Tags\Tag;
-use Carbon\Carbon;
 
 class CsvImportService
 {
@@ -37,8 +37,8 @@ class CsvImportService
      */
     private function parseCsv(UploadedFile $file): array
     {
-        $handle = fopen($file->getRealPath(), 'r');
-        if (!$handle) {
+        $handle = fopen($file->getRealPath(), 'rb');
+        if (! $handle) {
             throw new \Exception('Impossible de lire le fichier CSV.');
         }
 
@@ -47,7 +47,7 @@ class CsvImportService
 
         while (($row = fgetcsv($handle, 0, ';')) !== false) {
             $lineNumber++;
-            
+
             // Skip empty lines
             if (empty(array_filter($row))) {
                 continue;
@@ -58,7 +58,7 @@ class CsvImportService
             // Safety check for max rows
             if ($lineNumber > self::MAX_ROWS) {
                 fclose($handle);
-                throw new \Exception('Le fichier CSV contient trop de lignes (maximum: ' . self::MAX_ROWS . ').');
+                throw new \Exception('Le fichier CSV contient trop de lignes (maximum: '.self::MAX_ROWS.').');
             }
         }
 
@@ -95,7 +95,7 @@ class CsvImportService
             'events_created' => 0,
             'events_skipped' => 0,
             'tags_created' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         // Skip header row
@@ -110,7 +110,7 @@ class CsvImportService
                 $stats['events_skipped'] += $result['event_skipped'] ? 1 : 0;
                 $stats['tags_created'] += $result['tags_created'];
             } catch (\Exception $e) {
-                $stats['errors'][] = "Ligne {$lineNumber}: " . $e->getMessage();
+                $stats['errors'][] = "Ligne {$lineNumber} : ".$e->getMessage();
             }
         }
 
@@ -135,7 +135,7 @@ class CsvImportService
         // Parse and validate date
         try {
             $date = Carbon::createFromFormat('Y-m-d', $dateString);
-            if (!$date) {
+            if (! $date) {
                 throw new \Exception('Format de date invalide.');
             }
         } catch (\Exception $e) {
@@ -151,7 +151,7 @@ class CsvImportService
             return [
                 'event_created' => false,
                 'event_skipped' => true,
-                'tags_created' => 0
+                'tags_created' => 0,
             ];
         }
 
@@ -159,12 +159,12 @@ class CsvImportService
         $tagIds = [];
         $tagsCreated = 0;
 
-        if (!empty($tagsString)) {
+        if (! empty($tagsString)) {
             $tagNames = array_map('trim', explode(',', $tagsString));
             $tagNames = array_filter($tagNames); // Remove empty strings
 
             foreach ($tagNames as $tagName) {
-                if (!empty($tagName)) {
+                if (! empty($tagName)) {
                     $tag = $this->getOrCreateTag($tagName);
                     if ($tag->wasRecentlyCreated) {
                         $tagsCreated++;
@@ -182,14 +182,14 @@ class CsvImportService
         ]);
 
         // Attach tags
-        if (!empty($tagIds)) {
+        if (! empty($tagIds)) {
             $event->tags()->sync($tagIds);
         }
 
         return [
             'event_created' => true,
             'event_skipped' => false,
-            'tags_created' => $tagsCreated
+            'tags_created' => $tagsCreated,
         ];
     }
 
@@ -212,7 +212,7 @@ class CsvImportService
 
         return Tag::create([
             'name' => ['fr' => $name],
-            'color' => $randomColor
+            'color' => $randomColor,
         ]);
     }
 

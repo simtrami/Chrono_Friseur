@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImportCsvRequest;
 use App\Http\Requests\SearchEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
-use App\Http\Requests\ImportCsvRequest;
 use App\Models\Event;
-use App\Services\EventService;
 use App\Services\CsvImportService;
+use App\Services\EventService;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 
 class EventController extends Controller
 {
     private EventService $eventService;
+
     private CsvImportService $csvImportService;
 
     /**
@@ -35,6 +37,19 @@ class EventController extends Controller
 
         return $this->eventService->filterEvents($filters)
             ->with($this->getTagsRelation())->get();
+    }
+
+    /**
+     * Get the tags relation with the attributes to include in responses.
+     */
+    private function getTagsRelation(): string
+    {
+        // tags:id,name,color
+        return 'tags:'.implode(',', [
+            'id',
+            'name',
+            'color',
+        ]);
     }
 
     /**
@@ -81,26 +96,13 @@ class EventController extends Controller
     }
 
     /**
-     * Get the tags relation with the attributes to include in responses.
-     */
-    private function getTagsRelation(): string
-    {
-        // tags:id,name,color
-        return 'tags:'.implode(',', [
-            'id',
-            'name',
-            'color',
-        ]);
-    }
-
-    /**
      * Validate CSV file before import
      */
     public function validateCsvImport(ImportCsvRequest $request): JsonResponse
     {
         // If we reach here, validation passed
         $file = $request->file('csv_file');
-        
+
         // Get file info
         $fileInfo = [
             'name' => $file->getClientOriginalName(),
@@ -120,8 +122,8 @@ class EventController extends Controller
      */
     private function countCsvLines($file): int
     {
-        $handle = fopen($file->getRealPath(), 'r');
-        if (!$handle) {
+        $handle = fopen($file->getRealPath(), 'rb');
+        if (! $handle) {
             return 0;
         }
 
@@ -135,7 +137,7 @@ class EventController extends Controller
     }
 
     /**
-     * Import events from CSV file
+     * Import events from a CSV file
      */
     public function importCsv(ImportCsvRequest $request): JsonResponse
     {
@@ -143,32 +145,34 @@ class EventController extends Controller
             $file = $request->file('csv_file');
             $stats = $this->csvImportService->importEvents($file);
 
-            // Prepare response message
-            $message = "Import terminé avec succès !";
+            // Prepare a response message
+            $message = 'Importation terminée avec succès !';
+
             if ($stats['events_created'] > 0) {
                 $message .= " {$stats['events_created']} événement(s) créé(s).";
             }
+
             if ($stats['tags_created'] > 0) {
-                $message .= " {$stats['tags_created']} étiquette(s) créée(s).";
+                $message .= " {$stats['tags_created']} tag(s) créé(s).";
             }
+
             if ($stats['events_skipped'] > 0) {
                 $message .= " {$stats['events_skipped']} événement(s) ignoré(s) (doublons).";
             }
 
             $response = [
                 'message' => $message,
-                'stats' => $stats
+                'stats' => $stats,
             ];
 
-            if (!empty($stats['errors'])) {
+            if (! empty($stats['errors'])) {
                 $response['warnings'] = $stats['errors'];
             }
 
             return response()->json($response);
-
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de l\'import : ' . $e->getMessage(),
+                'message' => "Erreur lors de l'import : ".$e->getMessage(),
             ], 422);
         }
     }
