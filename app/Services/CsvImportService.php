@@ -3,144 +3,78 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Import;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Spatie\SimpleExcel\SimpleExcelReader;
 use Spatie\Tags\Tag;
 
 class CsvImportService
 {
     /**
-     * Maximum number of rows allowed in CSV
-     */
-    private const MAX_ROWS = 1000;
-
-    /**
      * Import events from CSV file
      */
-    public function importEvents(UploadedFile $file): array
+    public function importEvents(UploadedFile $file): Import
     {
-        // Parse CSV
-        $csvData = $this->parseCsv($file);
-
-        // Validate CSV structure
-        $this->validateCsvStructure($csvData);
+        $import = Import::create(['name' => $file->getClientOriginalName(), 'status' => Import::FAILURE]);
+        $csvData = SimpleExcelReader::create($file, 'csv')->useDelimiter(';')->getRows();
 
         // Import data in a transaction
-        return DB::transaction(function () use ($csvData) {
-            return $this->processImport($csvData);
-        });
-    }
+        try {
+            $stats = $this->processImport($import, $csvData);
+        } catch (Exception $e) {
+            Event::where('import_id', $import->id)->delete();
+            Tag::where('import_id', $import->id)->delete();
 
-    /**
-     * Parse CSV file content
-     */
-    private function parseCsv(UploadedFile $file): array
-    {
-        $handle = fopen($file->getRealPath(), 'rb');
-        if (! $handle) {
-            throw new \Exception('Impossible de lire le fichier CSV.');
+            $import->update([
+                'status' => Import::FAILURE,
+                'created_events' => 0,
+                'skipped_events' => 0,
+                'created_tags' => 0,
+            ]);
+
+            return $import->refresh();
         }
 
-        $data = [];
-        $lineNumber = 0;
+        $import->update([
+            'status' => Import::SUCCESS,
+            'created_events' => $stats['created_events'],
+            'skipped_events' => $stats['skipped_events'],
+            'created_tags' => $stats['created_tags'],
+        ]);
 
-        while (($row = fgetcsv($handle, 0, ';')) !== false) {
-            $lineNumber++;
-
-            // Skip empty lines
-            if (empty(array_filter($row))) {
-                continue;
-            }
-
-            $data[] = $row;
-
-            // Safety check for max rows
-            if ($lineNumber > self::MAX_ROWS) {
-                fclose($handle);
-                throw new \Exception('Le fichier CSV contient trop de lignes (maximum: '.self::MAX_ROWS.').');
-            }
-        }
-
-        fclose($handle);
-
-        if (empty($data)) {
-            throw new \Exception('Le fichier CSV est vide ou ne contient pas de données valides.');
-        }
-
-        return $data;
-    }
-
-    /**
-     * Validate CSV structure and required columns
-     */
-    private function validateCsvStructure(array $csvData): void
-    {
-        if (empty($csvData)) {
-            throw new \Exception('Le fichier CSV est vide ou ne contient pas de données.');
-        }
-
-        $firstRow = $csvData[0];
-        if (count($firstRow) !== 4) {
-            throw new \Exception('Le fichier CSV doit contenir exactement 4 colonnes.');
-        }
+        return $import->refresh();
     }
 
     /**
      * Process the import of CSV data
      */
-    private function processImport(array $csvData): array
+    private function processImport(Import $import, $dataRows): Import
     {
-        $stats = [
-            'events_created' => 0,
-            'events_skipped' => 0,
-            'tags_created' => 0,
-            'errors' => [],
-        ];
+        $dataRows->each(function ($row, $index) use (&$import) {
+            $result = $this->processRow($row, $import->id);
+            $import->created_events += $result['event_created'] ? 1 : 0;
+            $import->skipped_events += $result['event_skipped'] ? 1 : 0;
+            $import->created_tags += $result['created_tags'];
+        });
 
-        // Skip header row
-        $dataRows = array_slice($csvData, 1);
-
-        foreach ($dataRows as $index => $row) {
-            $lineNumber = $index + 2; // +2 because we start from line 1 and skip header
-
-            try {
-                $result = $this->processRow($row, $lineNumber);
-                $stats['events_created'] += $result['event_created'] ? 1 : 0;
-                $stats['events_skipped'] += $result['event_skipped'] ? 1 : 0;
-                $stats['tags_created'] += $result['tags_created'];
-            } catch (\Exception $e) {
-                $stats['errors'][] = "Ligne {$lineNumber} : ".$e->getMessage();
-            }
-        }
-
-        return $stats;
+        return $import;
     }
 
     /**
      * Process a single CSV row
      */
-    private function processRow(array $row, int $lineNumber): array
+    private function processRow(array $row, int $import_id): array
     {
         // Clean and validate data
-        $name = trim($row[0]);
-        $description = trim($row[1]);
-        $dateString = trim($row[2]);
-        $tagsString = trim($row[3]);
+        $name = trim($row['Nom']);
+        $description = trim($row['Description']);
+        $dateString = trim($row['Date']);
+        $tagsString = trim($row['Tags']);
 
-        if (empty($name)) {
-            throw new \Exception('Le nom de l\'événement est requis.');
-        }
-
-        // Parse and validate date
-        try {
-            $date = Carbon::createFromFormat('Y-m-d', $dateString);
-            if (! $date) {
-                throw new \Exception('Format de date invalide.');
-            }
-        } catch (\Exception $e) {
-            throw new \Exception('Format de date invalide. Utilisez le format YYYY-MM-DD.');
-        }
+        $date = Carbon::createFromFormat('Y-m-d', $dateString);
 
         // Check for duplicate event (same name and date)
         $existingEvent = Event::where('name', $name)
@@ -151,68 +85,65 @@ class CsvImportService
             return [
                 'event_created' => false,
                 'event_skipped' => true,
-                'tags_created' => 0,
+                'created_tags' => 0,
             ];
         }
 
-        // Process tags
-        $tagIds = [];
-        $tagsCreated = 0;
-
-        if (! empty($tagsString)) {
-            $tagNames = array_map('trim', explode(',', $tagsString));
-            $tagNames = array_filter($tagNames); // Remove empty strings
-
-            foreach ($tagNames as $tagName) {
-                if (! empty($tagName)) {
-                    $tag = $this->getOrCreateTag($tagName);
-                    if ($tag->wasRecentlyCreated) {
-                        $tagsCreated++;
-                    }
-                    $tagIds[] = $tag->id;
-                }
-            }
-        }
+        [$tagIds, $tagsCreated] = $this->processTags($tagsString, $import_id);
 
         // Create event
         $event = Event::create([
             'name' => $name,
             'description' => $description ?: null,
             'date' => $date,
+            'import_id' => $import_id,
         ]);
 
         // Attach tags
-        if (! empty($tagIds)) {
-            $event->tags()->sync($tagIds);
-        }
+        $event->tags()->sync($tagIds);
 
         return [
             'event_created' => true,
             'event_skipped' => false,
-            'tags_created' => $tagsCreated,
+            'created_tags' => $tagsCreated,
         ];
+    }
+
+    private function processTags(string $tagsString, int $import_id): array
+    {
+        $tagIds = [];
+        $tagsCreated = 0;
+
+        $tagNames = array_map('trim', explode(',', $tagsString));
+
+        foreach ($tagNames as $tagName) {
+            $tag = $this->getOrCreateTag($tagName, $import_id);
+            if ($tag->wasRecentlyCreated) {
+                $tagsCreated++;
+            }
+            $tagIds[] = $tag->id;
+        }
+
+        return [$tagIds, $tagsCreated];
     }
 
     /**
      * Get existing tag or create new one with random color
      */
-    private function getOrCreateTag(string $name): Tag
+    private function getOrCreateTag(string $name, int $import_id): Tag
     {
-        // Try to find existing tag (case-insensitive)
-        $existingTag = Tag::query()
-            ->whereRaw('LOWER(name->"$.fr") = LOWER(?)', [$name])
-            ->first();
+        // Try to find an existing tag
+        $existingTag = Tag::findFromStringOfAnyType($name, 'fr')->first();
 
         if ($existingTag) {
             return $existingTag;
         }
 
         // Create new tag with random color
-        $randomColor = $this->generateRandomColor();
-
         return Tag::create([
             'name' => ['fr' => $name],
-            'color' => $randomColor,
+            'color' => $this->generateRandomColor(),
+            'import_id' => $import_id,
         ]);
     }
 
@@ -221,27 +152,27 @@ class CsvImportService
      */
     private function generateRandomColor(): string
     {
-        // Generate a nice, vibrant color
-        $colors = [
-            '#EF4444', // red-500
-            '#F97316', // orange-500
-            '#F59E0B', // amber-500
-            '#EAB308', // yellow-500
-            '#84CC16', // lime-500
-            '#22C55E', // green-500
-            '#10B981', // emerald-500
-            '#14B8A6', // teal-500
-            '#06B6D4', // cyan-500
-            '#0EA5E9', // sky-500
-            '#3B82F6', // blue-500
-            '#6366F1', // indigo-500
-            '#8B5CF6', // violet-500
-            '#A855F7', // purple-500
-            '#D946EF', // fuchsia-500
-            '#EC4899', // pink-500
-            '#F43F5E', // rose-500
-        ];
+        // Colors from https://www.htmlwind.com/colors
+        $colors = collect([
+            '#ef4444', // red-500
+            '#f97316', // orange-500
+            '#f59e0b', // amber-500
+            '#eab308', // yellow-500
+            '#84cc16', // lime-500
+            '#22c55e', // green-500
+            '#10b981', // emerald-500
+            '#14b8a6', // teal-500
+            '#06b6d4', // cyan-500
+            '#0ea5e9', // sky-500
+            '#3b82f6', // blue-500
+            '#6366f1', // indigo-500
+            '#8b5cf6', // violet-500
+            '#a855f7', // purple-500
+            '#d946ef', // fuchsia-500
+            '#ec4899', // pink-500
+            '#f43f5e', // rose-500
+        ]);
 
-        return $colors[array_rand($colors)];
+        return $colors->random();
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\SearchEventRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
+use App\Models\Import;
 use App\Services\CsvImportService;
 use App\Services\EventService;
 use Exception;
@@ -143,36 +144,33 @@ class EventController extends Controller
     {
         try {
             $file = $request->file('csv_file');
-            $stats = $this->csvImportService->importEvents($file);
+            $import = $this->csvImportService->importEvents($file);
+
+            if ($import->status === Import::FAILURE) {
+                return response()->json([
+                    'message' => "Echec de l'importation. Veuillez vérifier le fichier importé.",
+                ], 422);
+            }
 
             // Prepare a response message
             $message = 'Importation terminée avec succès !';
 
-            if ($stats['events_created'] > 0) {
-                $message .= " {$stats['events_created']} événement(s) créé(s).";
+            if ($import->created_events > 0) {
+                $message .= " {$import->created_events} événement(s) créé(s).";
             }
 
-            if ($stats['tags_created'] > 0) {
-                $message .= " {$stats['tags_created']} tag(s) créé(s).";
+            if ($import->created_tags > 0) {
+                $message .= " {$import->created_tags} tag(s) créé(s).";
             }
 
-            if ($stats['events_skipped'] > 0) {
-                $message .= " {$stats['events_skipped']} événement(s) ignoré(s) (doublons).";
+            if ($import->skipped_events > 0) {
+                $message .= " {$import->skipped_events} événement(s) ignoré(s) (doublons).";
             }
 
-            $response = [
-                'message' => $message,
-                'stats' => $stats,
-            ];
-
-            if (! empty($stats['errors'])) {
-                $response['warnings'] = $stats['errors'];
-            }
-
-            return response()->json($response);
+            return response()->json(['message' => $message]);
         } catch (Exception $e) {
             return response()->json([
-                'message' => "Erreur lors de l'import : ".$e->getMessage(),
+                'message' => "Erreur lors de l'importation : ".$e->getMessage(),
             ], 422);
         }
     }

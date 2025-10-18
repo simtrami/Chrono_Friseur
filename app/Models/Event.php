@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Tags\HasTags;
 
 class Event extends Model
@@ -18,7 +19,7 @@ class Event extends Model
 
     protected $table = 'events';
 
-    protected $fillable = ['name', 'date', 'description'];
+    protected $fillable = ['name', 'date', 'description', 'import_id', 'import_status'];
 
     /**
      * Get the attributes that should be cast.
@@ -30,5 +31,10 @@ class Event extends Model
         return [
             'date' => 'datetime:Y-m-d H:i',
         ];
+    }
+
+    public function import(): BelongsTo
+    {
+        return $this->belongsTo(Import::class);
     }
 }
